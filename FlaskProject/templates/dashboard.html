@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <title>Dashboard</title>
+</head>
+<body>
+  <h2>Welcome, {{ username }}</h2>
+
+  <a href="/predict"><button>Go to Predict Page</button></a>
+
+  <h3>Premier League Table</h3>
+  <table border="1" cellpadding="6">
+    <tr>
+      <th>Pos</th>
+      <th>Team</th>
+      <th>Logo</th>
+      <th>Pts</th>
+      <th>P</th>
+      <th>GD</th>
+    </tr>
+    {% for row in table %}
+    <tr>
+      <td>{{ row.position }}</td>
+      <td>{{ row.team.name }}</td>
+      <td>
+        {% set crest = row.team.crestUrl if row.team.crestUrl else row.team.crest %}
+        {% if crest %}
+          <img src="{{ crest }}" width="24">
+        {% endif %}
+      </td>
+      <td>{{ row.points }}</td>
+      <td>{{ row.playedGames }}</td>
+      <td>{{ row.goalDifference }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <h3>Matchday {{ matchday }} Fixtures</h3>
+  <table border="1" cellpadding="6">
+    <tr>
+      <th>Home</th>
+      <th></th>
+      <th>Away</th>
+      <th>Status</th>
+    </tr>
+    {% for m in matches %}
+    <tr>
+      <td>
+        {% set hcrest = m.homeTeam.crest if m.homeTeam.crest else m.homeTeam.crestUrl %}
+        {% if hcrest %}<img src="{{ hcrest }}" width="24">{% endif %}
+        {{ m.homeTeam.name }}
+      </td>
+      <td>vs</td>
+      <td>
+        {% set acrest = m.awayTeam.crest if m.awayTeam.crest else m.awayTeam.crestUrl %}
+        {% if acrest %}<img src="{{ acrest }}" width="24">{% endif %}
+        {{ m.awayTeam.name }}
+      </td>
+      <td>{{ m.status }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>
