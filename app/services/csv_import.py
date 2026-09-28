@@ -9,13 +9,15 @@ from __future__ import annotations
 import csv
 import io
 from collections.abc import Callable
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
+from app.collectors.base import RawSale
+from app.core.enums import PriceType, SaleSource
 from app.core.errors import AppError, ValidationFailedError
 from app.core.redaction import safe_error_summary
 from app.models import IngestionRun
@@ -233,3 +235,82 @@ def import_listings_csv(
         handle_row=handle,
     )
     return run, results
+
+
+SALES_COLUMNS = [
+    "brand",
+    "category",
+    "product",
+    "title",
+    "size",
+    "colour",
+    "condition",
+    "sale_price",
+    "currency",
+    "price_type",
+    "marketplace",
+    "listed_at",
+    "sold_at",
+    "source_ref",
+    "notes",
+]
+
+
+def import_sales_csv(
+    session: Session,
+    content: bytes,
+    *,
+    source: str,
+    base_currency: str,
+    now: datetime,
+    record: Callable[[RawSale], tuple[object, bool]],
+    user_id: int | None = None,
+    max_rows: int = 5000,
+) -> IngestionRun:
+    """Import researched comps. ``record`` stores one RawSale and returns (row, created)."""
+
+    def handle(row: dict[str, str]) -> str:
+        sold_at = parse_datetime(row.get("sold_at", ""), "sold_at")
+        if sold_at is None:
+            raise ValueError("sold_at: required")
+        price = parse_decimal(row.get("sale_price", ""), "sale_price")
+        if price is None:
+            raise ValueError("sale_price: required")
+        raw = RawSale.model_validate(
+            {
+                "source": SaleSource.CSV_IMPORT,
+                "source_ref": row.get("source_ref") or None,
+                "marketplace": row.get("marketplace") or None,
+                "title": row.get("title") or None,
+                "brand": row.get("brand", ""),
+                "category": row.get("category", ""),
+                "product": row.get("product") or None,
+                "size": row.get("size") or None,
+                "colour": row.get("colour") or None,
+                "condition": row.get("condition") or None,
+                "sale_price": price,
+                "currency": row.get("currency") or base_currency,
+                "price_type": row.get("price_type") or PriceType.FINAL_SALE_PRICE.value,
+                "listed_at": parse_datetime(row.get("listed_at", ""), "listed_at"),
+                "sold_at": sold_at if sold_at.tzinfo else sold_at.replace(tzinfo=UTC),
+                "notes": row.get("notes") or None,
+            }
+        )
+        if raw.listed_at is not None and raw.listed_at.tzinfo is None:
+            raw = raw.model_copy(update={"listed_at": raw.listed_at.replace(tzinfo=UTC)})
+        if raw.sold_at > now:
+            raise ValueError("sold_at: is in the future")
+        _, created = record(raw)
+        return "created" if created else "skipped"
+
+    return run_import(
+        session,
+        kind="sales_csv",
+        source=source,
+        content=content,
+        now=now,
+        user_id=user_id,
+        max_rows=max_rows,
+        required_columns={"brand", "category", "sale_price", "sold_at"},
+        handle_row=handle,
+    )

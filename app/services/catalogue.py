@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.analysis.identification.types import BrandEntry, Catalogue, CategoryEntry
 from app.analysis.matching.matcher import ProductAliasEntry, ProductEntry
-from app.analysis.normalisation.text import normalise_text, slugify
+from app.analysis.normalisation.text import find_phrase, normalise_text, slugify
 from app.core.enums import AliasSource, AliasType, ProductLevel
 from app.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from app.models import Brand, BrandAlias, Category, CategoryAlias, Product, ProductAlias
@@ -247,3 +247,47 @@ def add_category_keyword(session: Session, category_id: int, keyword: str, *, ac
         session, actor, action="category.add_keyword", entity_type="category",
         entity_id=category_id, after={"keyword": keyword},
     )  # fmt: skip
+
+
+# ---------------------------------------------------------------- resolution from text
+
+
+def resolve_brand(catalogue: Catalogue, text: str | None) -> BrandEntry | None:
+    """A brand from a slug, name or alias ("stone-island", "Stone Island", "stoney")."""
+    if not text:
+        return None
+    by_slug = catalogue.brand_by_slug(text.strip().lower())
+    if by_slug is not None:
+        return by_slug
+    norm = normalise_text(text)
+    for brand in catalogue.brands:
+        if norm == normalise_text(brand.name) or norm in brand.aliases:
+            return brand
+    tokens = norm.split()
+    for brand in catalogue.brands:
+        for alias in sorted(brand.aliases, key=lambda a: -len(a.split())):
+            if find_phrase(tokens, alias.split()):
+                return brand
+    return None
+
+
+def resolve_category(catalogue: Catalogue, text: str | None) -> CategoryEntry | None:
+    """A category from a slug, name or keyword ("hoodies", "Hoodie", "zip up hoodie")."""
+    if not text:
+        return None
+    by_slug = catalogue.category_by_slug(text.strip().lower())
+    if by_slug is not None:
+        return by_slug
+    norm = normalise_text(text)
+    for category in catalogue.categories:
+        if norm == normalise_text(category.name) or norm in category.keywords:
+            return category
+    tokens = norm.split()
+    best: tuple[int, int, CategoryEntry] | None = None
+    for category in catalogue.categories:
+        for keyword in category.keywords:
+            if find_phrase(tokens, keyword.split()):
+                key = (len(keyword.split()), category.priority)
+                if best is None or key > best[:2]:
+                    best = (*key, category)
+    return best[2] if best else None

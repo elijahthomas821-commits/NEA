@@ -16,6 +16,7 @@ from app.workers.beat_schedule import BEAT_SCHEDULE
 
 TASK_MODULES = [
     "app.workers.tasks.maintenance",
+    "app.workers.tasks.market_stats",
 ]
 
 
