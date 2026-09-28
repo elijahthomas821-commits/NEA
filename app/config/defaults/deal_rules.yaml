@@ -15,6 +15,13 @@ max_capital_per_item: "320.00"     # total acquisition cost cap (price + fees + 
 max_inventory_exposure: "2000.00"  # unsold stock at cost + this item
 max_units_per_product: 3           # unsold units of the same product
 exclude_kids_sizes: true
+# When the authenticity check could not look at enough (few photos, no seller details):
+# "review" = send it to you as REVIEW ("ask for photos"); "reject" = discard it.
+low_auth_confidence_action: review
+# Reject for counterfeit risk only when warning signs add at least this much (log-odds, see
+# authenticity.yaml): severe under-pricing, replica wording, reused photos, a questionable
+# badge... A risk that comes mostly from the brand's prior goes to REVIEW instead.
+auth_reject_min_warning: "1.0"
 
 # Price used for the maximum purchase price: "expected" (median) or "quick" (P25, safer).
 resale_basis: expected

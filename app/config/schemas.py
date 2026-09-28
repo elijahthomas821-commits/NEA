@@ -340,6 +340,12 @@ class DealRulesConfig(StrictModel):
     max_inventory_exposure: PositiveMoney = Decimal(2000)
     max_units_per_product: int = Field(default=3, ge=1)
     exclude_kids_sizes: bool = True
+    # What to do when the authenticity check could not look at enough (few photos, no seller
+    # information): "review" asks you to check more; "reject" discards the listing.
+    low_auth_confidence_action: Literal["review", "reject"] = "review"
+    # Reject for counterfeit risk only when warning signs (not just the brand's prior) add at
+    # least this much to the log-odds; below it, a high-risk listing goes to REVIEW.
+    auth_reject_min_warning: Annotated[Decimal, Field(ge=0)] = Decimal("1.0")
     resale_basis: Literal["expected", "quick"] = "expected"
     high_priority: HighPriorityRules = Field(default_factory=HighPriorityRules)
     review: ReviewRules = Field(default_factory=ReviewRules)
@@ -350,24 +356,39 @@ class DealRulesConfig(StrictModel):
 # --------------------------------------------------------------------------- authenticity
 
 
+LogOdds = Annotated[Decimal, Field(ge=-10, le=10)]
+
+
 class ChecklistItem(StrictModel):
+    """Something to look for in the photos. Shifts are in log-odds (see AuthenticityShifts)."""
+
     code: str = Field(pattern=r"^[a-z0-9_]{2,40}$")
     description: str
-    weight: Ratio = Decimal("0.35")
+    observed_shift: LogOdds = Decimal("-0.5")  # seen and consistent: lowers risk
+    concern_shift: LogOdds = Decimal("1.2")  # seen but questionable: raises risk
     recommended_check: str | None = None
 
 
-class AuthenticitySignalWeights(StrictModel):
-    price_anomaly_severe: Ratio = Decimal("0.55")
-    price_anomaly_moderate: Ratio = Decimal("0.25")
-    replica_language: Ratio = Decimal("0.90")
-    missing_tags_language: Ratio = Decimal("0.20")
-    seller_new_account: Ratio = Decimal("0.10")
-    seller_few_reviews: Ratio = Decimal("0.10")
-    seller_low_rating: Ratio = Decimal("0.15")
-    duplicate_photos_other_seller: Ratio = Decimal("0.60")
-    mislabel_derived: Ratio = Decimal("0.25")
-    contradictory_identification: Ratio = Decimal("0.15")
+class AuthenticityShifts(StrictModel):
+    """How much each signal moves the odds that an item is counterfeit.
+
+    ``logit(risk) = logit(brand base risk) + Σ shifts``. Positive shifts raise the risk,
+    negative ones (good evidence) lower it. +0.7 roughly doubles the odds; -0.7 halves them.
+    """
+
+    price_anomaly_severe: LogOdds = Decimal("2.0")
+    price_anomaly_moderate: LogOdds = Decimal("0.8")
+    replica_language: LogOdds = Decimal("4.0")
+    missing_tags_language: LogOdds = Decimal("0.6")
+    seller_new_account: LogOdds = Decimal("0.4")
+    seller_few_reviews: LogOdds = Decimal("0.3")
+    seller_low_rating: LogOdds = Decimal("0.5")
+    reused_photos_other_seller: LogOdds = Decimal("2.0")
+    mislabel_derived: LogOdds = Decimal("0.8")
+    contradictory_identification: LogOdds = Decimal("0.5")
+    established_seller: LogOdds = Decimal("-0.5")
+    trusted_seller: LogOdds = Decimal("-1.0")
+    price_consistent_with_comps: LogOdds = Decimal("-0.2")
 
 
 class AuthenticityConfidenceRules(StrictModel):
@@ -384,12 +405,16 @@ class AuthenticityConfidenceRules(StrictModel):
 class AuthenticityConfig(StrictModel):
     low_risk_below: Ratio = Decimal("0.25")
     high_risk_from: Ratio = Decimal("0.50")
-    weights: AuthenticitySignalWeights = Field(default_factory=AuthenticitySignalWeights)
-    severe_price_ratio_to_p10: Annotated[Decimal, Field(gt=0, le=1)] = Decimal("0.60")
-    moderate_price_ratio_to_p25: Annotated[Decimal, Field(gt=0, le=1)] = Decimal("0.75")
+    shifts: AuthenticityShifts = Field(default_factory=AuthenticityShifts)
+    # Price anomaly vs the median of comparable sales. Flipping means buying below market, so
+    # only extreme under-pricing counts as a warning sign.
+    severe_price_ratio_to_median: Annotated[Decimal, Field(gt=0, le=1)] = Decimal("0.35")
+    moderate_price_ratio_to_median: Annotated[Decimal, Field(gt=0, le=1)] = Decimal("0.50")
     new_account_days: int = Field(default=30, ge=0)
     few_reviews_below: int = Field(default=3, ge=0)
     low_rating_below: Annotated[Decimal, Field(ge=0, le=5)] = Decimal("4.5")
+    established_min_reviews: int = Field(default=50, ge=1)
+    established_min_rating: Annotated[Decimal, Field(ge=0, le=5)] = Decimal("4.8")
     duplicate_phash_max_distance: int = Field(default=4, ge=0, le=16)
     missing_tag_phrases: list[str] = Field(default_factory=list)
     confidence: AuthenticityConfidenceRules = Field(default_factory=AuthenticityConfidenceRules)
@@ -400,6 +425,8 @@ class AuthenticityConfig(StrictModel):
     def _levels(self) -> AuthenticityConfig:
         if self.low_risk_below >= self.high_risk_from:
             raise ValueError("low_risk_below must be below high_risk_from")
+        if self.severe_price_ratio_to_median >= self.moderate_price_ratio_to_median:
+            raise ValueError("severe price ratio must be below the moderate one")
         return self
 
 
@@ -429,7 +456,7 @@ class MislabelRules(StrictModel):
 
 
 class MatchingRules(StrictModel):
-    min_score: Ratio = Decimal("0.60")
+    min_score: Ratio = Decimal("0.70")
     min_margin: Ratio = Decimal("0.08")
     fuzzy_min_similarity: Ratio = Decimal("0.70")
     # Applied when the listing's category was unknown and is inferred from the product.

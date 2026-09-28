@@ -67,11 +67,20 @@ def create_app(
         response.headers.setdefault("Cache-Control", "no-store")
         return response
 
-    from app.api.routes import catalogue, config, health, imports, listings, market
+    from app.api.routes import (
+        catalogue,
+        config,
+        evaluations,
+        health,
+        imports,
+        listings,
+        market,
+    )
 
     for router in (
         health.router,
         listings.router,
+        evaluations.router,
         imports.router,
         catalogue.router,
         market.router,

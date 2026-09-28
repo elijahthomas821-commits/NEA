@@ -80,7 +80,8 @@ def _alias_score(
     if not alias_tokens:
         return Decimal(0), ""
     if find_phrase(tokens, alias_tokens):
-        specificity = Decimal("0.75") + Decimal("0.05") * min(len(alias_tokens), 4)
+        # Longer phrases are more specific: 1 word 0.90, 2 words 0.95, 3+ words 1.00.
+        specificity = Decimal("0.85") + Decimal("0.05") * min(len(alias_tokens), 3)
         return alias.weight * specificity, f"alias '{alias.text}'"
     if len(alias.text.replace(" ", "")) >= 6:
         similarity, gram = best_fuzzy_match(fuzzy_tokens, alias.text)

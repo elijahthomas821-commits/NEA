@@ -82,7 +82,7 @@ mislabel:
   max_confidence: "0.60"
 
 matching:
-  min_score: "0.60"
+  min_score: "0.70"
   min_margin: "0.08"
   fuzzy_min_similarity: "0.70"
   # Applied when the category was unknown and is inferred from the matched product.

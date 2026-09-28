@@ -94,6 +94,26 @@ def _cmd_config_history(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_evaluate(args: argparse.Namespace) -> int:
+    from app.services.pipeline import evaluate_listing_by_id
+
+    with get_database().session_scope() as session:
+        evaluation = evaluate_listing_by_id(session, args.listing_id, trigger="manual")
+        print(
+            json.dumps(
+                {
+                    "evaluation_id": evaluation.id,
+                    "decision": evaluation.decision,
+                    "reason_codes": evaluation.reason_codes,
+                    "expected_profit": str(evaluation.expected_profit),
+                    "max_purchase_price": str(evaluation.max_purchase_price),
+                },
+                indent=2,
+            )
+        )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="resale", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -136,6 +156,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("kind", choices=kinds)
     p.set_defaults(func=_cmd_config_history)
 
+    p = sub.add_parser("evaluate", help="evaluate one listing now (synchronously)")
+    p.add_argument("listing_id", type=int)
+    p.set_defaults(func=_cmd_evaluate)
     return parser
 
 

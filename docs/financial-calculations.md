@@ -262,7 +262,76 @@ sell-through proxy = sales_30d / (sales_30d + active listings observed)
 "Active listings observed" counts only listings you have submitted, so it undercounts the
 real market and is labelled "observed".
 
-## 8. What these numbers are not
+## 8. Authenticity risk
+
+This is a risk assessment, never a certification. It starts from the brand's base risk (the
+prior share of counterfeits for that brand, set in `brands.yaml`), and every signal shifts the
+odds:
+
+```
+logit(risk) = logit(base risk) + Σ shifts          risk = 1 / (1 + e^(−logit))
+```
+
+A shift of +0.7 roughly doubles the odds and −0.7 roughly halves them. Placeholder values are
+in `authenticity.yaml`:
+
+| Raises risk | Shift | Lowers risk | Shift |
+| --- | --- | --- | --- |
+| Replica / look-alike wording | +4.0 | Checklist item seen in photos | about −0.5 each |
+| Price < 35 % of comps median | +2.0 | Seller marked as trusted | −1.0 |
+| Same photo on another seller's listing | +2.0 | Established seller (≥ 50 reviews, ≥ 4.8) | −0.5 |
+| Checklist item looks questionable | +1.2 | Price in the normal range | −0.2 |
+| Price < 50 % of comps median | +0.8 | | |
+| Brand inferred from photos (mislabel) | +0.8 | | |
+| "No tags", "label cut"… | +0.6 | | |
+| Contradictory details, new account, few reviews, low rating | +0.3 … +0.5 | | |
+
+Buying below market is the point of flipping, so only extreme under-pricing counts as a
+warning.
+
+Example: Stone Island (base 0.35), price 41 % of the median (+0.8), established seller (−0.5),
+four checklist items seen (−2.08). The logit is −0.62 + 0.8 − 0.5 − 2.08 = −2.40, so the risk
+is **0.083** (low).
+
+**Confidence** says how much could actually be checked: 0.20, plus 0.05 per photo (up to
++0.20), plus 0.10 per checklist item seen, plus small bonuses for seller details and market
+data. It is capped at 0.35 with no photos and at 0.90 overall.
+
+## 9. Deal rules
+
+Rules are configuration (`deal_rules`, versioned). The decision is made in three steps.
+
+1. **Hard gates reject**, each with a reason code:
+   - listing not active, missing price or unsupported currency;
+   - unknown brand or category, category out of scope, kids' size;
+   - replica wording, or a seller you blocked;
+   - insufficient market data;
+   - profit, ROI or identification confidence below your minimum;
+   - evidence-driven counterfeit risk above the maximum;
+   - median sale time over the maximum;
+   - price or total cost above the cap;
+   - inventory exposure or units of this product above the limit.
+2. **Near misses go to REVIEW.** If every failed gate is a numeric threshold missed by less
+   than `review.near_miss_pct` (10 %), the listing is sent as REVIEW instead of rejected.
+3. **Tiers.** A listing that passes every gate is HIGH priority if it also meets the stricter
+   `high_priority` thresholds and has none of these: a severe price anomaly, damage wording or
+   a suspected re-listing. Otherwise it is NORMAL. Caps then limit the best reachable tier:
+
+| Situation | Best tier |
+| --- | --- |
+| Brand inferred from photos of an unbranded listing | NORMAL |
+| Priced from your price guide, not sales data | REVIEW |
+| AI help was needed for identification but unavailable | NORMAL |
+| Sale speed unknown | NORMAL |
+| Contradictory details | REVIEW |
+| Risk high only because of the brand prior, or too little evidence to check | REVIEW ("ask for photos") |
+
+A counterfeit risk above `max_authenticity_risk` rejects the listing only when warning signs
+add at least `auth_reject_min_warning` (1.0) to the log-odds. When the risk comes mostly from
+the brand's base rate, you get REVIEW with the checks to make. Low check confidence also leads
+to REVIEW by default (`low_auth_confidence_action: review`).
+
+## 10. What these numbers are not
 
 They are estimates from the evidence recorded so far, with the assumptions above. Every
 evaluation stores its inputs: the configuration versions, the comps and their weights, every
