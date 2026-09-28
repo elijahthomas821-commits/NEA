@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI, Request, Response
+from fastapi.responses import JSONResponse
 
 from app import __version__
 from app.api.errors import install_error_handlers
@@ -49,6 +50,13 @@ def create_app(
     async def correlation_and_headers(
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
+        declared = request.headers.get("content-length")
+        limit = request.app.state.settings.max_request_bytes
+        if declared and declared.isdigit() and int(declared) > limit:
+            return JSONResponse(
+                status_code=413,
+                content={"error": {"code": "payload_too_large", "message": "request too large"}},
+            )
         correlation_id = clean_correlation_id(request.headers.get("x-request-id"))
         request.state.correlation_id = correlation_id
         clear_context()
@@ -59,9 +67,10 @@ def create_app(
         response.headers.setdefault("Cache-Control", "no-store")
         return response
 
-    from app.api.routes import health
+    from app.api.routes import health, imports, listings
 
-    app.include_router(health.router)
+    for router in (health.router, listings.router, imports.router):
+        app.include_router(router)
     return app
 
 

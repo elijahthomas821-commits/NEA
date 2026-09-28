@@ -192,7 +192,6 @@ class PriceHistory(Base):
 
     __tablename__ = "price_history"
     __table_args__ = (
-        UniqueConstraint("listing_id", "observed_at"),
         CheckConstraint("price > 0", name="price_positive"),
         currency_check(),
         Index("ix_price_history_listing_observed", "listing_id", text("observed_at DESC")),

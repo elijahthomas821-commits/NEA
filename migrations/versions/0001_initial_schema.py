@@ -2,7 +2,7 @@
 
 Revision ID: 0001_initial
 Revises:
-Create Date: 2026-09-28 09:16:38.004979
+Create Date: 2026-09-28 09:36:21.269274
 
 """
 
@@ -1055,9 +1055,6 @@ def upgrade() -> None:
             ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_price_history")),
-        sa.UniqueConstraint(
-            "listing_id", "observed_at", name=op.f("uq_price_history_listing_id_observed_at")
-        ),
     )
     op.create_index(
         "ix_price_history_listing_observed",

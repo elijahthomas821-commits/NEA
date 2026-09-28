@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     max_image_bytes: int = Field(default=8 * 1024 * 1024, ge=1024)
     max_images_per_listing: int = Field(default=12, ge=1, le=40)
     max_upload_bytes: int = Field(default=5 * 1024 * 1024, ge=1024)
+    max_request_bytes: int = Field(default=64 * 1024 * 1024, ge=1024)
 
     # API
     api_rate_limit_per_minute: int = Field(default=120, ge=1)
