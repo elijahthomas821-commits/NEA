@@ -196,3 +196,19 @@ class TestCsvImport:
         assert run.status == "failed"
         assert run.rows_created == 0
         assert db_session.scalar(select(Listing).where(Listing.title == "x")) is None
+
+
+def test_huge_dimensions_are_refused_before_decoding():
+    """A small file that would expand to a huge bitmap (decompression bomb) is refused."""
+    from io import BytesIO
+
+    from PIL import Image
+
+    from app.core.errors import ValidationFailedError
+    from app.services.images import MAX_PIXELS, inspect_image
+
+    buffer = BytesIO()
+    Image.new("1", (8000, 6000)).save(buffer, format="PNG")  # 48M pixels, a few KB on disk
+    assert MAX_PIXELS < 8000 * 6000
+    with pytest.raises(ValidationFailedError, match="dimensions too large"):
+        inspect_image(buffer.getvalue(), max_bytes=10_000_000)

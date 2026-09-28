@@ -5,14 +5,17 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import timedelta
 from pathlib import Path
 
 import yaml
+from sqlalchemy.orm import Session
 
 from app.config.settings import get_settings
 from app.core.enums import ConfigKind
 from app.core.logging import configure_logging
 from app.database.session import get_database
+from app.workers.dispatch import TaskDispatcher
 
 
 def _cmd_seed(args: argparse.Namespace) -> int:
@@ -114,6 +117,38 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
     return 0
 
 
+def queue_reevaluation(
+    session: Session, dispatcher: TaskDispatcher, *, seen_within_days: int | None
+) -> int:
+    """Queue every active listing for re-evaluation (after you change the rules or add market
+    data). Alerts use the re-alert policy: only listings that became worth a look message you."""
+    from sqlalchemy import select
+
+    from app.core.enums import AlertMode, ListingStatus
+    from app.core.time import utcnow
+    from app.models import Listing
+
+    query = select(Listing.id).where(Listing.status == ListingStatus.ACTIVE.value)
+    if seen_within_days is not None:
+        query = query.where(Listing.last_seen_at >= utcnow() - timedelta(days=seen_within_days))
+    count = 0
+    for listing_id in session.scalars(query.order_by(Listing.id)):
+        dispatcher.evaluate_listing(listing_id, trigger="config_change", alert=AlertMode.DEALS)
+        count += 1
+    return count
+
+
+def _cmd_reevaluate(args: argparse.Namespace) -> int:
+    from app.workers.dispatch import CeleryDispatcher
+
+    with get_database().session_scope() as session:
+        count = queue_reevaluation(
+            session, CeleryDispatcher(), seen_within_days=args.seen_within_days
+        )
+    print(f"queued {count} active listings for re-evaluation")
+    return 0
+
+
 def _cmd_bot(_args: argparse.Namespace) -> int:
     from app.notifications.telegram.runner import run_bot
 
@@ -165,6 +200,14 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("evaluate", help="evaluate one listing now (synchronously)")
     p.add_argument("listing_id", type=int)
     p.set_defaults(func=_cmd_evaluate)
+
+    p = sub.add_parser(
+        "reevaluate", help="re-evaluate active listings (after changing rules or market data)"
+    )
+    p.add_argument(
+        "--seen-within-days", type=int, default=None, help="only listings seen this recently"
+    )
+    p.set_defaults(func=_cmd_reevaluate)
 
     p = sub.add_parser(
         "bot", help="run the Telegram bot (long polling), or register the webhook in webhook mode"

@@ -16,6 +16,7 @@ import hashlib
 import json
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -302,36 +303,84 @@ def set_excluded(
     return row
 
 
-def load_comps(session: Session, *, brand_id: int, category_id: int) -> list[CompSale]:
-    """All usable sales for a brand x category (the engine applies window and level rules)."""
-    rows = session.scalars(
-        select(MarketSale).where(
-            MarketSale.brand_id == brand_id,
-            MarketSale.category_id == category_id,
-            MarketSale.excluded.is_(False),
-        )
+COMP_COLUMNS = (
+    MarketSale.id,
+    MarketSale.product_id,
+    MarketSale.brand_id,
+    MarketSale.category_id,
+    MarketSale.size_normalised,
+    MarketSale.colour,
+    MarketSale.condition,
+    MarketSale.sale_price,
+    MarketSale.currency,
+    MarketSale.price_type,
+    MarketSale.source,
+    MarketSale.marketplace,
+    MarketSale.sold_at,
+    MarketSale.listed_at,
+    MarketSale.trust_weight,
+    MarketSale.match_confidence,
+)
+
+
+_CONDITIONS = {c.value: c for c in Condition}
+_PRICE_TYPES = {p.value: p for p in PriceType}
+_SOURCES = {s.value: s for s in SaleSource}
+
+
+def comp_from_row(row: Any) -> CompSale:
+    """A comp from a row of :data:`COMP_COLUMNS` (already typed and constrained by the schema).
+
+    Tuple unpacking and enum lookup tables: thousands of comps are built per evaluation.
+    """
+    (
+        sale_id, product_id, brand_id, category_id, size, colour, condition, price, currency,
+        price_type, source, marketplace, sold_at, listed_at, trust_weight, match_confidence,
+    ) = row  # fmt: skip
+    return CompSale(
+        id=sale_id,
+        product_id=product_id,
+        brand_id=brand_id,
+        category_id=category_id,
+        size=size,
+        colour=colour,
+        condition=_CONDITIONS[condition] if condition else None,
+        price=price,
+        currency=currency,
+        price_type=_PRICE_TYPES[price_type],
+        source=_SOURCES[source],
+        marketplace=marketplace,
+        sold_at=sold_at,
+        listed_at=listed_at,
+        trust_weight=trust_weight,
+        match_confidence=match_confidence,
     )
-    return [
-        CompSale(
-            id=row.id,
-            product_id=row.product_id,
-            brand_id=row.brand_id,
-            category_id=row.category_id,
-            size=row.size_normalised,
-            colour=row.colour,
-            condition=Condition(row.condition) if row.condition else None,
-            price=row.sale_price,
-            currency=row.currency,
-            price_type=PriceType(row.price_type),
-            source=SaleSource(row.source),
-            marketplace=row.marketplace,
-            sold_at=row.sold_at,
-            listed_at=row.listed_at,
-            trust_weight=row.trust_weight,
-            match_confidence=row.match_confidence,
-        )
-        for row in rows
-    ]
+
+
+def load_comps(
+    session: Session,
+    *,
+    brand_id: int,
+    category_id: int,
+    since: datetime | None = None,
+    until: datetime | None = None,
+) -> list[CompSale]:
+    """Usable sales for a brand x category sold in ``[since, until]``.
+
+    Pricing passes its comparison window, so old sales are never loaded (the
+    ``(brand_id, category_id, sold_at)`` index serves this) and never bloat the evaluation
+    snapshot. The engine re-checks the window and the evaluation time regardless.
+    """
+    query = select(*COMP_COLUMNS).where(
+        MarketSale.brand_id == brand_id,
+        MarketSale.category_id == category_id,
+        MarketSale.excluded.is_(False),
+    )
+    if since is not None:
+        query = query.where(MarketSale.sold_at >= since)
+    if until is not None:
+        query = query.where(MarketSale.sold_at <= until)
+    return [comp_from_row(row) for row in session.execute(query)]
 
 
 def load_fx(session: Session) -> FxTable:

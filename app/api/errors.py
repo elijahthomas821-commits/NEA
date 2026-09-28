@@ -68,4 +68,9 @@ def install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(Exception)
     async def _unhandled(request: Request, exc: Exception) -> JSONResponse:
         log.exception("unhandled_error", path=request.url.path)
-        return _envelope(request, 500, "internal_error", "internal server error")
+        response = _envelope(request, 500, "internal_error", "internal server error")
+        # This response bypasses the middleware that normally adds these headers.
+        response.headers["X-Request-ID"] = getattr(request.state, "correlation_id", "") or ""
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Cache-Control"] = "no-store"
+        return response

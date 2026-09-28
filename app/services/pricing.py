@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
@@ -65,7 +65,13 @@ def price_target(
     )
     market = estimate_market(
         target,
-        load_comps(session, brand_id=brand_id, category_id=category_id),
+        load_comps(
+            session,
+            brand_id=brand_id,
+            category_id=category_id,
+            since=as_of - timedelta(days=bundle.market.window_days),
+            until=as_of,
+        ),
         market=bundle.market,
         conditions=bundle.conditions,
         sizes=bundle.sizes,

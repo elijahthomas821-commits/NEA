@@ -127,7 +127,11 @@ def _redis_probe(url: str) -> Callable[[], None]:
 
 def app_factory() -> FastAPI:
     """Entry point for ``uvicorn --factory app.main:app_factory``."""
-    return create_app()
+    from app.core.runtime import freeze_startup_objects
+
+    app = create_app()
+    freeze_startup_objects()
+    return app
 
 
 __all__ = ["InMemoryRateLimiter", "app_factory", "create_app"]

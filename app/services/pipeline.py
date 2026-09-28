@@ -196,6 +196,7 @@ def evaluate_listing(
             product_is_generic=not product_is_specific,
             as_of=ctx.now,
             rules=bundle.market.velocity,
+            window_days=bundle.market.window_days,
         )
     estimate = pricing.estimate if pricing else None
 

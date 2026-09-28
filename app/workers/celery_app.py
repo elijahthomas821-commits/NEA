@@ -12,6 +12,7 @@ from celery.signals import worker_process_init
 
 from app.config.settings import get_settings
 from app.core.logging import configure_logging
+from app.core.runtime import freeze_startup_objects
 from app.workers.beat_schedule import BEAT_SCHEDULE
 
 TASK_MODULES = [
@@ -52,6 +53,7 @@ celery_app = create_celery()
 
 
 @worker_process_init.connect
-def _init_worker_logging(**_kwargs: object) -> None:
+def _init_worker_process(**_kwargs: object) -> None:
     settings = get_settings()
     configure_logging(settings.log_level, settings.log_format)
+    freeze_startup_objects()

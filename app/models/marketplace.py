@@ -90,6 +90,21 @@ class Listing(Base):
             text("first_seen_at DESC"),
             postgresql_where=text("status = 'active'"),
         ),
+        # Active-listing counts for sale-speed estimates (index-only scans).
+        Index(
+            "ix_listings_active_brand_category",
+            "brand_id",
+            "category_id",
+            postgresql_where=text("status = 'active'"),
+        ),
+        Index(
+            "ix_listings_active_category", "category_id", postgresql_where=text("status = 'active'")
+        ),
+        Index(
+            "ix_listings_active_product",
+            "matched_product_id",
+            postgresql_where=text("status = 'active'"),
+        ),
     )
 
     id: Mapped[int] = pk()

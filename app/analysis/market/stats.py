@@ -17,11 +17,19 @@ HALF = Decimal("0.5")
 MAD_TO_SIGMA = Decimal("1.4826")
 
 
+WEIGHT_QUANTUM = Decimal("1e-12")
+
+
 def recency_weight(age_days: Decimal, half_life_days: Decimal) -> Decimal:
-    """``0.5 ** (age / half_life)``: a sale one half-life old counts half as much."""
+    """``0.5 ** (age / half_life)``: a sale one half-life old counts half as much.
+
+    A weight, not an amount of money: it is computed in binary floating point (a Decimal power
+    with a fractional exponent was the slowest step of an evaluation) and rounded to 12 decimal
+    places, far below anything that can move a price by a penny.
+    """
     if age_days <= 0:
         return ONE
-    return HALF ** (age_days / half_life_days)
+    return Decimal(0.5 ** float(age_days / half_life_days)).quantize(WEIGHT_QUANTUM)
 
 
 def effective_sample_size(weights: Sequence[Decimal]) -> Decimal:

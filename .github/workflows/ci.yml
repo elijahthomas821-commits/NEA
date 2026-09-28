@@ -88,5 +88,10 @@ jobs:
         run: touch .env && POSTGRES_PASSWORD=ci-dummy docker compose config --quiet
       - name: Build image
         run: docker build -f docker/Dockerfile -t resale-sourcing:ci .
-      - name: Smoke test image
-        run: docker run --rm resale-sourcing:ci resale --help
+      - name: Smoke test image (with the compose hardening)
+        run: |
+          harden="--read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true"
+          docker run --rm $harden resale-sourcing:ci resale --help
+          docker run --rm $harden resale-sourcing:ci python -c \
+            "import app.main, app.workers.celery_app, app.notifications.telegram.runner"
+          test "$(docker run --rm resale-sourcing:ci id -u)" = "10001"

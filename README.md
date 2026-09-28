@@ -10,7 +10,7 @@ make every purchase yourself — the system never buys anything.
 
 ## Status
 
-Built in phases (see the architecture plan). Implemented so far:
+Built in nine phases following the architecture plan; all are complete:
 
 - **Foundation:** configuration (environment + versioned business rules), structured logging
   with secret redaction, PostgreSQL schema with Alembic migrations, seed data, API with API-key
@@ -29,15 +29,26 @@ Built in phases (see the architecture plan). Implemented so far:
 - **Stock and results:** purchases (including bundles, split to the penny), the inventory
   lifecycle, your sales (which feed back into market data and score the original prediction),
   analytics and CSV exports.
+- **Hardening:** security review with automated checks, container hardening, a performance
+  benchmark at the planned scale, and an end-to-end test of the whole loop.
 
-Still to come: hardening and full documentation (Phase 9).
+## Documentation
+
+| Document | For |
+| --- | --- |
+| [docs/runbook.md](docs/runbook.md) | running it: first start, updates, backups, rotating secrets, monitoring, troubleshooting, performance |
+| [docs/configuration.md](docs/configuration.md) | every environment setting and business-rule kind |
+| [docs/financial-calculations.md](docs/financial-calculations.md) | how every money figure is calculated, with worked examples |
+| [docs/analytics.md](docs/analytics.md) | every analytics metric, with a worked example |
+| [docs/security.md](docs/security.md) | the security review: controls, how they're tested, open items |
+| [docs/adapters.md](docs/adapters.md) | adding a data source (permitted access only) |
 
 ## Quick start (Docker Compose)
 
 ```bash
 cp .env.example .env        # set POSTGRES_PASSWORD, TELEGRAM_BOT_TOKEN, TELEGRAM_ALLOWED_USER_IDS
 docker compose up -d --build
-docker compose run --rm api resale create-user me --telegram-id <your Telegram user id>
+docker compose run --rm api resale create-user me
 docker compose run --rm api resale create-api-key me   # prints the key once
 curl -H "Authorization: Bearer <key>" http://127.0.0.1:8000/health
 ```

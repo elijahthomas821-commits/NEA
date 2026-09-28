@@ -10,7 +10,9 @@ then category only); category-only data is used for speed, never for price.
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Literal
@@ -27,12 +29,11 @@ HALF = Decimal("0.5")
 LiquidityLabel = Literal["high", "medium", "low"]
 
 
-class VelocityScope(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
+@dataclass(frozen=True, kw_only=True)
+class VelocityScope:
     name: str
     sales: list[CompSale]
-    censored_days: list[Decimal] = []  # days listed so far for unsold items
+    censored_days: list[Decimal] = field(default_factory=list)  # days listed so far, unsold
     active_observed: int = 0
 
 
@@ -63,16 +64,19 @@ def kaplan_meier_median(observations: Sequence[tuple[Decimal, bool]]) -> Decimal
     """
     if not observations:
         return None
-    times = sorted({duration for duration, sold in observations if sold})
+    # One sweep over the distinct durations (O(n log n)): before time t, everything with a
+    # shorter duration has left the risk set, so ``at_risk`` is the count with duration ≥ t.
+    sold_at: Counter[Decimal] = Counter(duration for duration, sold in observations if sold)
+    leaving: Counter[Decimal] = Counter(duration for duration, _ in observations)
+    at_risk = len(observations)
     survival = ONE
-    for t in times:
-        at_risk = sum(1 for duration, _ in observations if duration >= t)
-        sold_now = sum(1 for duration, sold in observations if sold and duration == t)
-        if at_risk == 0:
-            continue
-        survival *= ONE - Decimal(sold_now) / Decimal(at_risk)
-        if survival <= HALF:
-            return t
+    for t in sorted(leaving):
+        sold_now = sold_at.get(t, 0)
+        if sold_now:
+            survival *= ONE - Decimal(sold_now) / Decimal(at_risk)
+            if survival <= HALF:
+                return t
+        at_risk -= leaving[t]
     return None
 
 

@@ -19,6 +19,15 @@ x-app: &app
   volumes:
     - media:/data/media
   restart: unless-stopped
+  # Hardening: nothing is writable except the media volume and /tmp, the process can't gain
+  # privileges, and it holds no Linux capabilities (it needs none).
+  read_only: true
+  tmpfs:
+    - /tmp
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
 
 services:
   postgres:

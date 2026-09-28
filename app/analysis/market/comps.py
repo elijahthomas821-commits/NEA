@@ -18,6 +18,7 @@ If no level has enough data there is no estimate — the listing cannot qualify
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -51,7 +52,11 @@ class Frozen(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class CompSale(Frozen):
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CompSale:
+    """One comparable sale as the engine sees it (a plain dataclass: thousands are built per
+    evaluation, from database rows that the schema already constrains)."""
+
     id: int
     product_id: int | None
     brand_id: int
@@ -258,7 +263,8 @@ def adjust(
         Decimal(str(age_days(sale.sold_at, target.as_of))), market.half_life_days
     )
     adjusted = sale.price * fx_rate * haircut * condition_ratio * size_ratio
-    return AdjustedComp(
+    # Built from values computed just above (trusted), so validation is skipped.
+    return AdjustedComp.model_construct(
         sale_id=sale.id,
         level=level,
         original_price=sale.price,

@@ -23,6 +23,7 @@ from app.config.settings import Settings, get_settings
 from app.core.enums import AlertMode
 from app.core.logging import configure_logging, get_logger
 from app.core.redaction import safe_error_summary
+from app.core.runtime import freeze_startup_objects
 from app.core.time import utcnow
 from app.database.session import Database, get_database
 from app.notifications.telegram import state
@@ -289,6 +290,7 @@ def run_bot(settings: Settings | None = None) -> int:
             "telegram_allowlist_empty",
             hint="send /start to the bot to see your user ID, then set TELEGRAM_ALLOWED_USER_IDS",
         )
+    freeze_startup_objects()
     try:
         if settings.telegram_mode == "webhook":
             register_webhook(bot.client, settings)
