@@ -1,0 +1,25 @@
+# Your price guide (config kind: price_guide) - EMPTY BY DEFAULT.
+#
+# You have no sales data yet, so most listings will be rejected with
+# INSUFFICIENT_MARKET_DATA until comps are recorded. Two ways to get started:
+#
+# 1. Record sold comps you research by hand (Telegram /comp, POST /market/sales, or a CSV
+#    import). This is real market data and is always preferred.
+# 2. Fill in reference ranges below from your own knowledge. They are used ONLY when no
+#    comparable-sales level has enough data; such evaluations are labelled "your price guide"
+#    and capped at REVIEW tier by default (deal_rules.caps.price_guide).
+#
+# condition is the grade the range refers to (other grades are adjusted with the condition
+# multipliers). product is an optional product slug from products.yaml.
+#
+# Example (NOT real prices - fill in your own):
+# entries:
+#   - brand: stone-island
+#     category: sweatshirts
+#     condition: very_good
+#     low: "0.00"
+#     typical: "0.00"
+#     high: "0.00"
+#     currency: GBP
+#     note: "from my own research, Oct 2026"
+entries: []

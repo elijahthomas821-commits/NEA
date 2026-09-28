@@ -1,0 +1,155 @@
+# Authenticity RISK assessment (config kind: authenticity).
+#
+# This is a risk assessment, never a certification. The score starts from the brand's base
+# risk (brands.yaml) and every signal shifts the odds (log-odds model, see
+# docs/financial-calculations.md):
+#
+#     logit(risk) = logit(base risk) + sum of shifts
+#
+# Positive shifts raise the risk; negative shifts (good evidence) lower it. +0.7 roughly
+# doubles the odds, -0.7 roughly halves them. Photo inspection by AI, when enabled, only
+# reports "observed / not visible / concern" for each checklist item - never a verdict.
+# PLACEHOLDER VALUES - tune them against your own experience.
+
+low_risk_below: "0.25"
+high_risk_from: "0.50"
+
+shifts:
+  price_anomaly_severe: "2.0"          # price below median of comps x severe ratio
+  price_anomaly_moderate: "0.8"        # price below median of comps x moderate ratio
+  replica_language: "4.0"              # "replica", "1:1", "rep", "inspired", ...
+  missing_tags_language: "0.6"         # "no tags", "label cut", ...
+  seller_new_account: "0.4"
+  seller_few_reviews: "0.3"
+  seller_low_rating: "0.5"
+  reused_photos_other_seller: "2.0"    # same photo on another seller's listing
+  mislabel_derived: "0.8"              # brand inferred from photos of an unbranded listing
+  contradictory_identification: "0.5"
+  established_seller: "-0.5"           # many reviews, high rating
+  trusted_seller: "-1.0"               # you marked the seller as trusted
+  price_consistent_with_comps: "-0.2"  # price in the normal range for the item
+
+# Price anomaly vs the median of comparable sales. Buying below market is the point of
+# flipping, so only extreme under-pricing counts as a warning sign.
+severe_price_ratio_to_median: "0.35"     # e.g. under £38.50 when similar items sell for £110
+moderate_price_ratio_to_median: "0.50"   # e.g. under £55
+new_account_days: 30
+few_reviews_below: 3
+low_rating_below: "4.5"
+established_min_reviews: 50
+established_min_rating: "4.8"
+duplicate_phash_max_distance: 4
+
+missing_tag_phrases:
+  - no tags
+  - no tag
+  - tags removed
+  - tag removed
+  - label cut
+  - labels cut
+  - label removed
+  - no label
+  - no labels
+  - no badge
+  - badge missing
+  - missing badge
+
+confidence:
+  base: "0.20"
+  per_photo: "0.05"
+  max_photo_bonus: "0.20"
+  per_observed_check: "0.10"
+  seller_info_bonus: "0.05"
+  comps_bonus: "0.05"
+  maximum: "0.90"
+  no_photos_cap: "0.35"
+
+# Things to look for in photos, per brand. Keep descriptions neutral: they tell the reviewer
+# (you, or the AI photo inspection) what to look at, not what the answer is. Verify details
+# against the brand's own guidance and trusted authentication resources.
+brand_checklists:
+  stone-island:
+    - code: compass_badge
+      description: "Detachable compass badge on the left sleeve, fully visible, with clean embroidery and two buttons"
+      observed_shift: "-0.56"
+      concern_shift: "1.20"
+      recommended_check: "Ask for a close, straight-on photo of the compass badge (front)"
+    - code: badge_back
+      description: "Back of the compass badge visible (backing and printed text)"
+      observed_shift: "-0.48"
+      concern_shift: "1.20"
+      recommended_check: "Ask for a photo of the back of the compass badge"
+    - code: authenticity_label
+      description: "Authenticity/Certilogo code label inside the garment (on pieces made since around 2010)"
+      observed_shift: "-0.56"
+      concern_shift: "1.20"
+      recommended_check: "Ask for a photo of the authenticity code label; check the code with the brand's verification service after purchase"
+    - code: care_labels
+      description: "Internal care and composition labels present, legible, with an article/model code"
+      observed_shift: "-0.48"
+      concern_shift: "1.20"
+      recommended_check: "Ask for photos of the inside care labels"
+  cp-company:
+    - code: lens_or_goggle
+      description: "Lens or goggle hardware visible, with branding on the lens frame"
+      observed_shift: "-0.56"
+      concern_shift: "1.20"
+      recommended_check: "Ask for a close photo of the lens/goggle hardware"
+    - code: internal_labels
+      description: "Internal brand label and care labels present and legible"
+      observed_shift: "-0.48"
+      concern_shift: "1.20"
+      recommended_check: "Ask for photos of the neck and care labels"
+    - code: authenticity_label
+      description: "Authenticity code label or tag, where applicable"
+      observed_shift: "-0.48"
+      concern_shift: "1.20"
+      recommended_check: "Ask for a photo of any authenticity code label"
+  moncler:
+    - code: logo_patch
+      description: "Moncler logo patch visible, with neat stitching"
+      observed_shift: "-0.48"
+      concern_shift: "1.20"
+      recommended_check: "Ask for a close photo of the logo patch"
+    - code: authenticity_label
+      description: "Authenticity label (NFC/QR label on newer items, hologram label on older items)"
+      observed_shift: "-0.64"
+      concern_shift: "1.20"
+      recommended_check: "Ask for a photo of the authenticity label and scan/verify it after purchase"
+    - code: care_labels
+      description: "Care and down-content labels present and legible"
+      observed_shift: "-0.48"
+      concern_shift: "1.20"
+      recommended_check: "Ask for photos of the inside care labels"
+  burberry:
+    - code: check_alignment
+      description: "Check pattern visible at seams, pockets and collar"
+      observed_shift: "-0.48"
+      concern_shift: "1.20"
+      recommended_check: "Ask for photos showing the check pattern meeting at seams"
+    - code: brand_label
+      description: "Neck/brand label clearly visible"
+      observed_shift: "-0.48"
+      concern_shift: "1.20"
+      recommended_check: "Ask for a straight-on photo of the neck label"
+    - code: care_labels
+      description: "Care labels present and legible"
+      observed_shift: "-0.48"
+      concern_shift: "1.20"
+      recommended_check: "Ask for photos of the inside care labels"
+  ralph-lauren:
+    - code: pony_logo
+      description: "Embroidered pony/logo visible in close-up"
+      observed_shift: "-0.48"
+      concern_shift: "1.20"
+      recommended_check: "Ask for a close photo of the logo embroidery"
+    - code: neck_label
+      description: "Neck label and care tags visible"
+      observed_shift: "-0.48"
+      concern_shift: "1.20"
+      recommended_check: "Ask for photos of the neck label and care tags"
+
+generic_recommended_checks:
+  - "Ask for photos of the neck label, care labels and any authenticity label"
+  - "Pay through the marketplace checkout so Buyer Protection applies"
+  - "Inspect labels, stitching and hardware on arrival before leaving feedback"

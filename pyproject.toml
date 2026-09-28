@@ -1,0 +1,145 @@
+[project]
+name = "resale-sourcing"
+version = "0.1.0"
+description = "Resale sourcing and profit analysis platform (manual listing intake, comparable-sales pricing, Telegram alerts)."
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+license = { text = "Proprietary" }
+dependencies = [
+    "alembic>=1.13",
+    "anthropic>=0.40",
+    "celery[redis]>=5.4",
+    "fastapi>=0.115",
+    "httpx>=0.27",
+    "pillow>=11.0",
+    "psycopg[binary]>=3.2",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "python-multipart>=0.0.18",
+    "pyyaml>=6.0.2",
+    "redis>=5.0",
+    "sqlalchemy>=2.0.36",
+    "structlog>=24.4",
+    "tzdata>=2024.2",
+    "uvicorn>=0.32",
+]
+
+[dependency-groups]
+dev = [
+    "celery-types>=0.22",
+    "hypothesis>=6.115",
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "respx>=0.21",
+    "ruff>=0.8",
+    "types-pyyaml>=6.0",
+]
+
+[project.scripts]
+resale = "app.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.uv]
+package = true
+
+# ---------------------------------------------------------------- ruff
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["FlaskProject"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "I", "B", "UP", "S", "C4", "SIM", "RUF", "PT", "DTZ", "T20", "PL", "N",
+]
+ignore = [
+    "PLR0911",  # too many returns: rule engines and parsers read better with early returns
+    "PLR0912",  # too many branches (same reason)
+    "PLR0913",  # too many arguments: explicit keyword-only parameters are preferred to kwargs bags
+    "PLR0915",  # too many statements
+    "PLR2004",  # magic values: thresholds live in config; remaining literals are clearer inline
+    "RUF001", "RUF002", "RUF003",  # "£", "×" and "–" are intentional in user-facing text
+    "S101",     # assert is used only for internal invariants and in tests
+    "PLC0415",  # deliberate lazy imports (CLI start-up time, optional deps, import cycles)
+    "PLW0603",  # module-level singletons (database, logging) are set via `global`
+    "PLR0917",  # FastAPI endpoints take their dependencies as parameters
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S311", "PLC0415", "DTZ001", "N802"]
+"migrations/**" = ["E501"]
+"app/cli.py" = ["T201"]
+"scripts/**" = ["T201"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Path", "fastapi.Header", "fastapi.File", "fastapi.Form"]
+
+# ---------------------------------------------------------------- mypy
+[tool.mypy]
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+exclude = ["^FlaskProject/", "^migrations/versions/"]
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+check_untyped_defs = true
+no_implicit_optional = true
+disallow_untyped_defs = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = ["app.analysis.*", "app.core.*", "app.config.*"]
+strict = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = ["kombu.*", "respx.*"]
+ignore_missing_imports = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+# ---------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+    "integration: needs PostgreSQL (and sometimes Redis)",
+    "redis: needs a running Redis server",
+    "e2e: end-to-end flow across services",
+    "slow: slower tests (performance, real worker)",
+]
+filterwarnings = [
+    "error",
+    # Celery/kombu emit deprecation warnings on import that are not ours to fix.
+    "ignore::DeprecationWarning:kombu.*",
+    "ignore::DeprecationWarning:celery.*",
+    "ignore::PendingDeprecationWarning:celery.*",
+]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+omit = ["app/cli.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@overload",
+    "\\.\\.\\.$",
+]

@@ -1,0 +1,89 @@
+# Identification rules (config kind: identification).
+
+# Confidence that the brand is right, by where it was found.
+brand_field_confidence: "0.95"        # the marketplace brand field
+brand_title_confidence: "0.90"        # the title
+brand_description_confidence: "0.60"  # only the description
+brand_fuzzy_min_similarity: "0.50"    # trigram similarity for misspellings
+brand_fuzzy_factor: "0.80"            # confidence multiplier for fuzzy matches
+category_field_confidence: "0.90"
+category_title_confidence: "0.85"
+contradiction_factor: "0.60"          # multiplier when sources disagree
+replica_factor: "0.20"                # multiplier when replica wording is present
+
+# Brand field values that mean "no real brand given".
+generic_brand_values:
+  - other
+  - others
+  - unbranded
+  - no brand
+  - unknown
+  - vintage
+  - none
+  - n a
+  - designer
+  - handmade
+
+# Wording that indicates a replica or a look-alike (applies to every brand). A phrase is
+# ignored when negated just before it ("not fake", "no replicas"), which is common in
+# genuine listings. Brand-specific "<brand> style/inspired" wording is in brands.yaml.
+replica_phrases:
+  - replica
+  - replicas
+  - rep
+  - reps quality
+  - 1 1
+  - 1to1
+  - one to one
+  - inspired
+  - dupe
+  - fake
+  - look alike
+  - lookalike
+  - mirror quality
+  - unauthorised
+  - unauthorized
+  - aaa quality
+  - not genuine
+  - not authentic
+  - not original
+
+ai:
+  enabled: true
+  # AI identification is only requested when rules-based confidence is below this (or the
+  # sources contradict each other)...
+  invoke_below_confidence: "0.75"
+  # ...or when the listing has photos to check against the brand's authenticity checklist.
+  analyse_photos: true
+  max_photos: 6
+  # AI-derived confidence can never exceed this.
+  max_confidence: "0.80"
+  agree_boost: "0.5"
+  disagree_factor: "0.6"
+
+# Mislabelled listings: unbranded/unknown-brand items whose photos show a known brand's marks.
+mislabel:
+  enabled: true
+  min_price: "5.00"
+  max_price: "150.00"
+  require_keyword: true
+  keywords:
+    - badge
+    - patch
+    - goggle
+    - lens
+    - compass
+    - arm badge
+    - sleeve badge
+    - overshirt
+    - nylon metal
+    - garment dyed
+  min_ai_confidence: "0.50"
+  max_confidence: "0.60"
+
+matching:
+  min_score: "0.70"
+  min_margin: "0.08"
+  fuzzy_min_similarity: "0.70"
+  # Applied when the category was unknown and is inferred from the matched product.
+  inferred_category_factor: "0.90"
