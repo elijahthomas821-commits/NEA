@@ -1,0 +1,127 @@
+# Authenticity RISK assessment (config kind: authenticity).
+#
+# This is a risk assessment, never a certification. The score is computed deterministically
+# from the signals below (noisy-OR aggregation, see docs/financial-calculations.md). Photo
+# inspection by AI, when enabled, only reports "observed / not visible / concern" for each
+# checklist item - it never gives a verdict.
+
+low_risk_below: "0.25"
+high_risk_from: "0.50"
+
+weights:
+  price_anomaly_severe: "0.55"      # price below P10 of comps x severe ratio
+  price_anomaly_moderate: "0.25"    # price below P25 of comps x moderate ratio
+  replica_language: "0.90"          # "replica", "1:1", "rep", "inspired", ...
+  missing_tags_language: "0.20"     # "no tags", "label cut", ...
+  seller_new_account: "0.10"
+  seller_few_reviews: "0.10"
+  seller_low_rating: "0.15"
+  duplicate_photos_other_seller: "0.60"  # same photo on another seller's listing
+  mislabel_derived: "0.25"          # brand inferred from photos of an unbranded listing
+  contradictory_identification: "0.15"
+
+severe_price_ratio_to_p10: "0.60"
+moderate_price_ratio_to_p25: "0.75"
+new_account_days: 30
+few_reviews_below: 3
+low_rating_below: "4.5"
+duplicate_phash_max_distance: 4
+
+missing_tag_phrases:
+  - no tags
+  - no tag
+  - tags removed
+  - tag removed
+  - label cut
+  - labels cut
+  - label removed
+  - no label
+  - no labels
+  - no badge
+  - badge missing
+  - missing badge
+
+confidence:
+  base: "0.20"
+  per_photo: "0.05"
+  max_photo_bonus: "0.20"
+  per_observed_check: "0.10"
+  seller_info_bonus: "0.05"
+  comps_bonus: "0.05"
+  maximum: "0.90"
+  no_photos_cap: "0.35"
+
+# Things to look for in photos, per brand. Keep descriptions neutral: they tell the reviewer
+# (you, or the AI photo inspection) what to look at, not what the answer is. Verify details
+# against the brand's own guidance and trusted authentication resources.
+brand_checklists:
+  stone-island:
+    - code: compass_badge
+      description: "Detachable compass badge on the left sleeve, fully visible, with clean embroidery and two buttons"
+      weight: "0.35"
+      recommended_check: "Ask for a close, straight-on photo of the compass badge (front)"
+    - code: badge_back
+      description: "Back of the compass badge visible (backing and printed text)"
+      weight: "0.30"
+      recommended_check: "Ask for a photo of the back of the compass badge"
+    - code: authenticity_label
+      description: "Authenticity/Certilogo code label inside the garment (on pieces made since around 2010)"
+      weight: "0.35"
+      recommended_check: "Ask for a photo of the authenticity code label; check the code with the brand's verification service after purchase"
+    - code: care_labels
+      description: "Internal care and composition labels present, legible, with an article/model code"
+      weight: "0.30"
+      recommended_check: "Ask for photos of the inside care labels"
+  cp-company:
+    - code: lens_or_goggle
+      description: "Lens or goggle hardware visible, with branding on the lens frame"
+      weight: "0.35"
+      recommended_check: "Ask for a close photo of the lens/goggle hardware"
+    - code: internal_labels
+      description: "Internal brand label and care labels present and legible"
+      weight: "0.30"
+      recommended_check: "Ask for photos of the neck and care labels"
+    - code: authenticity_label
+      description: "Authenticity code label or tag, where applicable"
+      weight: "0.30"
+      recommended_check: "Ask for a photo of any authenticity code label"
+  moncler:
+    - code: logo_patch
+      description: "Moncler logo patch visible, with neat stitching"
+      weight: "0.30"
+      recommended_check: "Ask for a close photo of the logo patch"
+    - code: authenticity_label
+      description: "Authenticity label (NFC/QR label on newer items, hologram label on older items)"
+      weight: "0.40"
+      recommended_check: "Ask for a photo of the authenticity label and scan/verify it after purchase"
+    - code: care_labels
+      description: "Care and down-content labels present and legible"
+      weight: "0.30"
+      recommended_check: "Ask for photos of the inside care labels"
+  burberry:
+    - code: check_alignment
+      description: "Check pattern visible at seams, pockets and collar"
+      weight: "0.30"
+      recommended_check: "Ask for photos showing the check pattern meeting at seams"
+    - code: brand_label
+      description: "Neck/brand label clearly visible"
+      weight: "0.30"
+      recommended_check: "Ask for a straight-on photo of the neck label"
+    - code: care_labels
+      description: "Care labels present and legible"
+      weight: "0.30"
+      recommended_check: "Ask for photos of the inside care labels"
+  ralph-lauren:
+    - code: pony_logo
+      description: "Embroidered pony/logo visible in close-up"
+      weight: "0.30"
+      recommended_check: "Ask for a close photo of the logo embroidery"
+    - code: neck_label
+      description: "Neck label and care tags visible"
+      weight: "0.30"
+      recommended_check: "Ask for photos of the neck label and care tags"
+
+generic_recommended_checks:
+  - "Ask for photos of the neck label, care labels and any authenticity label"
+  - "Pay through the marketplace checkout so Buyer Protection applies"
+  - "Inspect labels, stitching and hardware on arrival before leaving feedback"

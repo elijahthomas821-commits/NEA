@@ -1,0 +1,157 @@
+# Category tree. Only categories with in_scope: true are evaluated; the others exist so that
+# out-of-scope items (a knit jumper, a cap) are recognised and rejected with a clear reason
+# rather than "unknown category".
+#
+# keywords  phrases that indicate the category in a title/description or a marketplace
+#           category field. When several categories match, the longest phrase wins, then the
+#           higher priority (so "hooded sweatshirt" is a hoodie, "knitted jumper" is knitwear).
+
+categories:
+  - slug: tops
+    name: Tops
+    in_scope: false
+    children:
+      - slug: sweatshirts
+        name: Sweatshirts
+        in_scope: true
+        priority: 10
+        keywords:
+          - sweatshirt
+          - sweatshirts
+          - sweat
+          - crewneck
+          - crew neck
+          - crewneck sweatshirt
+          - crew sweat
+          - jumper
+          - sweater
+          - pullover
+          - hoodies & sweatshirts
+          - hoodies and sweatshirts
+          - sweatshirts & hoodies
+      - slug: hoodies
+        name: Hoodies
+        in_scope: true
+        priority: 20
+        keywords:
+          - hoodie
+          - hoodies
+          - hoody
+          - hooded
+          - hooded sweatshirt
+          - hooded top
+          - zip hoodie
+          - zip up hoodie
+          - full zip hoodie
+          - goggle hoodie
+      - slug: knitwear
+        name: Knitwear
+        in_scope: false
+        priority: 30
+        keywords:
+          - knit
+          - knitted
+          - knitwear
+          - cardigan
+          - lambswool
+          - wool jumper
+          - knitted jumper
+          - cable knit
+          - jumpers & sweaters
+          - jumpers and sweaters
+      - slug: t-shirts
+        name: T-shirts and polos
+        in_scope: false
+        priority: 30
+        keywords:
+          - t shirt
+          - tshirt
+          - tee
+          - polo shirt
+          - t-shirts
+      - slug: shirts
+        name: Shirts
+        in_scope: false
+        priority: 5
+        keywords:
+          - shirt
+          - button down
+          - oxford shirt
+
+  - slug: outerwear
+    name: Outerwear
+    in_scope: false
+    children:
+      - slug: jackets
+        name: Jackets and coats
+        in_scope: true
+        priority: 25
+        keywords:
+          - jacket
+          - jackets
+          - hooded jacket
+          - overshirt
+          - over shirt
+          - coat
+          - coats
+          - parka
+          - gilet
+          - bodywarmer
+          - body warmer
+          - bomber
+          - windbreaker
+          - anorak
+          - puffer
+          - down jacket
+          - field jacket
+          - harrington
+          - trench
+          - trench coat
+          - smock
+          - shell jacket
+          - outerwear
+          - jackets & coats
+          - coats & jackets
+
+  - slug: bottoms
+    name: Bottoms
+    in_scope: false
+    children:
+      - slug: trousers
+        name: Trousers
+        in_scope: false
+        priority: 10
+        keywords:
+          - trousers
+          - joggers
+          - cargos
+          - cargo pants
+          - jeans
+          - pants
+          - tracksuit bottoms
+          - sweatpants
+          - sweat pants
+          - track pants
+          - trackies
+      - slug: shorts
+        name: Shorts
+        in_scope: false
+        priority: 10
+        keywords:
+          - shorts
+          - swim shorts
+          - sweat shorts
+
+  - slug: accessories
+    name: Accessories
+    in_scope: false
+    priority: 10
+    keywords:
+      - cap
+      - hat
+      - beanie
+      - scarf
+      - bag
+      - belt
+      - gloves
+      - socks

@@ -1,0 +1,96 @@
+# Brand catalogue seed. Brands are data, not code: add or edit brands here (then run
+# `resale seed`) or through the API.
+#
+# aliases           phrases that identify the brand in a brand field, title or description
+#                   (matched after normalisation: lower-case, accents and punctuation removed,
+#                   so "C.P. Company" and "cp company" are the same alias).
+# negative_aliases  phrases that mention the brand but mean "not this brand" (style/inspired
+#                   wording). Generic replica wording ("replica", "1:1", ...) is in
+#                   identification.yaml and applies to every brand.
+# base_authenticity_risk
+#                   prior counterfeit risk for the brand on second-hand marketplaces (0-1).
+#                   PLACEHOLDER judgement values - adjust from your own experience.
+
+brands:
+  - name: Stone Island
+    slug: stone-island
+    base_authenticity_risk: "0.35"
+    aliases:
+      - stone island
+      - stoneisland
+      - stone-island
+      - stone islnd
+      - stone iland
+      - stone isalnd
+      - stoney island
+    negative_aliases:
+      - stone island style
+      - stone island inspired
+      - stone island type
+      - stone island badge only
+      - badge only
+      - not stone island
+      - stone island look
+
+  - name: C.P. Company
+    slug: cp-company
+    base_authenticity_risk: "0.30"
+    aliases:
+      - cp company
+      - c p company
+      - cpcompany
+      - cp co
+      - cp comapny
+      - cp compnay
+    negative_aliases:
+      - cp company style
+      - cp company inspired
+      - goggle style
+      - not cp company
+
+  - name: Ralph Lauren
+    slug: ralph-lauren
+    base_authenticity_risk: "0.15"
+    aliases:
+      - ralph lauren
+      - polo ralph lauren
+      - polo by ralph lauren
+      - ralph lauren polo
+      - ralphlauren
+      - ralph laurent
+      - raulph lauren
+    negative_aliases:
+      - ralph lauren style
+      - ralph lauren inspired
+      - not ralph lauren
+
+  - name: Moncler
+    slug: moncler
+    base_authenticity_risk: "0.45"
+    aliases:
+      - moncler
+      - monclr
+      - monkler
+      - moncler grenoble
+      - moncler genius
+    negative_aliases:
+      - moncler style
+      - moncler inspired
+      - not moncler
+
+  - name: Burberry
+    slug: burberry
+    base_authenticity_risk: "0.35"
+    aliases:
+      - burberry
+      - burberrys
+      - burberry london
+      - burberry brit
+      - burberry prorsum
+      - burbery
+      - burberrry
+    negative_aliases:
+      - burberry style
+      - burberry inspired
+      - burberry check style
+      - not burberry

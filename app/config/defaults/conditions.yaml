@@ -1,0 +1,12 @@
+# Condition value multipliers (config kind: conditions), relative to "very good" = 1.00.
+# Comparable sales are normalised to the target listing's condition with these ratios, e.g.
+# a "good" comp sold at £85 is treated as £85 x 1.00 / 0.85 = £100 for a "very good" target.
+# SEED VALUES - to be recalibrated from your own sales data.
+multipliers:
+  new_with_tags: "1.15"
+  new_without_tags: "1.08"
+  very_good: "1.00"
+  good: "0.85"
+  satisfactory: "0.65"
+# Comps with no recorded condition are treated as this grade (and down-weighted).
+assume_when_unknown: good

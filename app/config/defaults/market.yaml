@@ -1,0 +1,82 @@
+# Comparable-sales engine (config kind: market). See docs/financial-calculations.md.
+
+# Only sales within this many days of the evaluation are used.
+window_days: 365
+# Recency weight = 0.5 ^ (age_days / half_life_days).
+half_life_days: "90"
+# A fallback level is used only if its effective sample size (Kish) reaches this...
+min_effective_n: "5"
+# ...and it has at least this many sales.
+min_sample_size: 3
+
+# Fallback hierarchy, most specific first. Category-only data is never used for price.
+levels: [L1, L2, L3, L4, L5, L6]
+
+# Which weighted percentile each estimate uses.
+estimate_percentiles:
+  quick: "25"
+  expected: "50"
+  optimistic: "75"
+
+# Trust weight per data source.
+source_trust:
+  own_sale: "1.0"          # your own completed sales (exact final prices)
+  manual_entry: "0.8"      # sales you researched and typed in
+  csv_import: "0.8"
+  observed_sold_listing: "0.7"
+  licensed_api: "0.9"
+
+# Trust weight per marketplace the comp sold on (you resell on Vinted).
+marketplace_trust:
+  vinted: "1.0"
+  default: "0.8"
+
+# Vinted "sold" items show only the last asking price (offers are private). With no
+# final-price data available these are used, discounted and down-weighted.
+last_asking_price:
+  use_for_price: true
+  haircut: "0.92"
+  trust_multiplier: "0.6"
+
+unknown_condition_weight: "0.8"
+
+outliers:
+  min_n: 4
+  iqr_min_n: 8
+  iqr_k: "1.5"
+  mad_k: "3.0"
+
+confidence:
+  n_scale: "5"
+  dispersion_scale: "0.5"
+  level_factors:
+    L1: "1.00"
+    L2: "0.95"
+    L3: "0.85"
+    L4: "0.75"
+    L5: "0.55"
+    L6: "0.45"
+    GUIDE: "0.25"
+  factor_weights:
+    n: "1"
+    level: "1"
+    dispersion: "1"
+    recency: "0.5"
+    match: "1"
+
+fx_max_age_days: 7
+
+velocity:
+  min_events: 3
+  target_days: 30
+  volume_scale: "10"
+  speed_weight: "0.6"
+  high_liquidity_from: "0.66"
+  medium_liquidity_from: "0.33"
+
+# Your own reference price ranges (config kind: price_guide) are used only when no
+# comparable-sales level has enough data. Estimates from the guide get this fixed confidence
+# and are capped at the tier in deal_rules.caps.price_guide.
+price_guide:
+  enabled: true
+  confidence: "0.25"

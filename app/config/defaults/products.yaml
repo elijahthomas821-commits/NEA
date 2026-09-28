@@ -1,0 +1,378 @@
+# Canonical products used for matching listings to comparable sales.
+#
+# level: model | product_line. A "brand_category_generic" product is created automatically
+# for every brand x in-scope category, so any listing with a known brand and category can
+# still match (at low confidence) when no specific product fits.
+#
+# aliases: phrases that point to the product, with an optional weight (0-1, default 1.0).
+# Keep aliases specific: "crinkle reps" identifies a product, "nylon" does not.
+# These entries are identification aids only - they contain no prices.
+
+products:
+  # ------------------------------------------------------------------ Stone Island
+  - brand: stone-island
+    category: sweatshirts
+    level: product_line
+    name: Stone Island crewneck sweatshirt
+    slug: crewneck-sweatshirt
+    aliases:
+      - {alias: crewneck sweatshirt, weight: "0.8"}
+      - {alias: crew neck sweatshirt, weight: "0.8"}
+      - {alias: garment dyed crewneck, weight: "0.9"}
+      - {alias: cotton fleece crewneck, weight: "0.9"}
+      - {alias: crewneck, weight: "0.7"}
+  - brand: stone-island
+    category: sweatshirts
+    level: product_line
+    name: Stone Island half-zip sweatshirt
+    slug: half-zip-sweatshirt
+    aliases:
+      - {alias: half zip, weight: "0.9"}
+      - {alias: quarter zip, weight: "0.9"}
+      - {alias: 1/4 zip, weight: "0.9"}
+  - brand: stone-island
+    category: hoodies
+    level: product_line
+    name: Stone Island pullover hoodie
+    slug: pullover-hoodie
+    aliases:
+      - {alias: pullover hoodie, weight: "0.8"}
+      - {alias: overhead hoodie, weight: "0.8"}
+      - {alias: hooded sweatshirt, weight: "0.7"}
+  - brand: stone-island
+    category: hoodies
+    level: product_line
+    name: Stone Island zip hoodie
+    slug: zip-hoodie
+    aliases:
+      - {alias: zip hoodie, weight: "0.9"}
+      - {alias: full zip hoodie, weight: "0.9"}
+      - {alias: zip up hoodie, weight: "0.9"}
+      - {alias: zip through hoodie, weight: "0.9"}
+  - brand: stone-island
+    category: jackets
+    level: model
+    name: Stone Island Nylon Metal overshirt
+    slug: nylon-metal-overshirt
+    aliases:
+      - {alias: nylon metal}
+      - {alias: nylon metal overshirt}
+      - {alias: nylon metal jacket}
+  - brand: stone-island
+    category: jackets
+    level: model
+    name: Stone Island Crinkle Reps jacket
+    slug: crinkle-reps-jacket
+    aliases:
+      - {alias: crinkle reps}
+      - {alias: crinkle reps ny}
+      - {alias: crinkle reps r nylon}
+  - brand: stone-island
+    category: jackets
+    level: model
+    name: Stone Island Soft Shell-R jacket
+    slug: soft-shell-r-jacket
+    aliases:
+      - {alias: soft shell r}
+      - {alias: soft shell}
+      - {alias: softshell}
+      - {alias: soft shell-r e.dye}
+  - brand: stone-island
+    category: jackets
+    level: model
+    name: Stone Island Membrana 3L TC jacket
+    slug: membrana-3l-tc-jacket
+    aliases:
+      - {alias: membrana}
+      - {alias: membrana 3l tc}
+  - brand: stone-island
+    category: jackets
+    level: model
+    name: Stone Island Micro Reps jacket
+    slug: micro-reps-jacket
+    aliases:
+      - {alias: micro reps}
+  - brand: stone-island
+    category: jackets
+    level: model
+    name: Stone Island David-TC jacket
+    slug: david-tc-jacket
+    aliases:
+      - {alias: david tc}
+      - {alias: david light tc}
+      - {alias: david tela}
+  - brand: stone-island
+    category: jackets
+    level: product_line
+    name: Stone Island Ghost Piece jacket
+    slug: ghost-piece-jacket
+    aliases:
+      - {alias: ghost piece}
+      - {alias: ghost}
+  - brand: stone-island
+    category: jackets
+    level: product_line
+    name: Stone Island garment dyed overshirt
+    slug: garment-dyed-overshirt
+    aliases:
+      - {alias: overshirt, weight: "0.7"}
+      - {alias: brushed cotton overshirt, weight: "0.9"}
+      - {alias: garment dyed overshirt, weight: "0.9"}
+      - {alias: old effect overshirt, weight: "0.9"}
+  - brand: stone-island
+    category: jackets
+    level: product_line
+    name: Stone Island Skin Touch Nylon-TC jacket
+    slug: skin-touch-nylon-tc-jacket
+    aliases:
+      - {alias: skin touch}
+      - {alias: skin touch nylon}
+
+  # ------------------------------------------------------------------ C.P. Company
+  - brand: cp-company
+    category: hoodies
+    level: product_line
+    name: C.P. Company Goggle hoodie
+    slug: goggle-hoodie
+    aliases:
+      - {alias: goggle hoodie}
+      - {alias: goggle hooded sweatshirt}
+      - {alias: goggle zip hoodie}
+      - {alias: goggle}
+      - {alias: goggles hoodie}
+  - brand: cp-company
+    category: hoodies
+    level: product_line
+    name: C.P. Company Lens hoodie
+    slug: lens-hoodie
+    aliases:
+      - {alias: lens hoodie}
+      - {alias: arm lens hoodie}
+      - {alias: lens hooded}
+  - brand: cp-company
+    category: sweatshirts
+    level: product_line
+    name: C.P. Company Lens crewneck sweatshirt
+    slug: lens-crewneck-sweatshirt
+    aliases:
+      - {alias: lens sweatshirt}
+      - {alias: lens crewneck}
+      - {alias: arm lens}
+      - {alias: lens}
+  - brand: cp-company
+    category: sweatshirts
+    level: product_line
+    name: C.P. Company Diagonal Raised Fleece sweatshirt
+    slug: diagonal-raised-fleece-sweatshirt
+    aliases:
+      - {alias: diagonal raised fleece}
+      - {alias: diagonal fleece}
+  - brand: cp-company
+    category: jackets
+    level: product_line
+    name: C.P. Company Goggle jacket
+    slug: goggle-jacket
+    aliases:
+      - {alias: goggle jacket}
+      - {alias: mille miglia}
+      - {alias: goggle}
+  - brand: cp-company
+    category: jackets
+    level: model
+    name: C.P. Company Chrome-R overshirt
+    slug: chrome-r-overshirt
+    aliases:
+      - {alias: chrome r}
+      - {alias: chrome r overshirt}
+      - {alias: chrome overshirt}
+  - brand: cp-company
+    category: jackets
+    level: model
+    name: C.P. Company Nycra-R jacket
+    slug: nycra-r-jacket
+    aliases:
+      - {alias: nycra}
+      - {alias: nycra r}
+  - brand: cp-company
+    category: jackets
+    level: model
+    name: C.P. Company Pro-Tek jacket
+    slug: pro-tek-jacket
+    aliases:
+      - {alias: pro tek}
+      - {alias: protek}
+  - brand: cp-company
+    category: jackets
+    level: model
+    name: C.P. Company Shell-R jacket
+    slug: shell-r-jacket
+    aliases:
+      - {alias: shell r}
+      - {alias: shell r goggle}
+  - brand: cp-company
+    category: jackets
+    level: model
+    name: C.P. Company 50 Fili jacket
+    slug: 50-fili-jacket
+    aliases:
+      - {alias: 50 fili}
+
+  # ------------------------------------------------------------------ Ralph Lauren
+  - brand: ralph-lauren
+    category: hoodies
+    level: product_line
+    name: Ralph Lauren Polo Bear hoodie
+    slug: polo-bear-hoodie
+    aliases:
+      - {alias: polo bear hoodie}
+      - {alias: polo bear}
+  - brand: ralph-lauren
+    category: hoodies
+    level: product_line
+    name: Ralph Lauren pony logo hoodie
+    slug: pony-logo-hoodie
+    aliases:
+      - {alias: pony hoodie, weight: "0.8"}
+      - {alias: pony logo hoodie, weight: "0.9"}
+      - {alias: fleece hoodie, weight: "0.7"}
+  - brand: ralph-lauren
+    category: sweatshirts
+    level: product_line
+    name: Ralph Lauren Polo Bear sweatshirt
+    slug: polo-bear-sweatshirt
+    aliases:
+      - {alias: polo bear sweatshirt}
+      - {alias: polo bear}
+  - brand: ralph-lauren
+    category: sweatshirts
+    level: product_line
+    name: Ralph Lauren half-zip sweatshirt
+    slug: half-zip-sweatshirt
+    aliases:
+      - {alias: half zip, weight: "0.9"}
+      - {alias: quarter zip, weight: "0.9"}
+      - {alias: 1/4 zip, weight: "0.9"}
+  - brand: ralph-lauren
+    category: jackets
+    level: model
+    name: Ralph Lauren Harrington jacket
+    slug: harrington-jacket
+    aliases:
+      - {alias: harrington}
+      - {alias: bayport}
+  - brand: ralph-lauren
+    category: jackets
+    level: product_line
+    name: Ralph Lauren quilted jacket
+    slug: quilted-jacket
+    aliases:
+      - {alias: quilted jacket}
+      - {alias: quilted}
+  - brand: ralph-lauren
+    category: jackets
+    level: product_line
+    name: Ralph Lauren down puffer jacket
+    slug: down-puffer-jacket
+    aliases:
+      - {alias: puffer}
+      - {alias: down jacket}
+      - {alias: el cap}
+
+  # ------------------------------------------------------------------ Moncler
+  - brand: moncler
+    category: jackets
+    level: model
+    name: Moncler Maya jacket
+    slug: maya-jacket
+    aliases:
+      - {alias: maya}
+  - brand: moncler
+    category: jackets
+    level: model
+    name: Moncler Montcla jacket
+    slug: montcla-jacket
+    aliases:
+      - {alias: montcla}
+  - brand: moncler
+    category: jackets
+    level: model
+    name: Moncler Acorus jacket
+    slug: acorus-jacket
+    aliases:
+      - {alias: acorus}
+  - brand: moncler
+    category: jackets
+    level: model
+    name: Moncler Montgenevre jacket
+    slug: montgenevre-jacket
+    aliases:
+      - {alias: montgenevre}
+  - brand: moncler
+    category: jackets
+    level: product_line
+    name: Moncler down gilet
+    slug: down-gilet
+    aliases:
+      - {alias: gilet}
+      - {alias: bodywarmer}
+      - {alias: body warmer}
+  - brand: moncler
+    category: hoodies
+    level: product_line
+    name: Moncler logo hoodie
+    slug: logo-hoodie
+    aliases:
+      - {alias: logo hoodie, weight: "0.8"}
+      - {alias: zip up hoodie, weight: "0.7"}
+  - brand: moncler
+    category: sweatshirts
+    level: product_line
+    name: Moncler logo sweatshirt
+    slug: logo-sweatshirt
+    aliases:
+      - {alias: logo sweatshirt, weight: "0.8"}
+      - {alias: maglia, weight: "0.9"}
+
+  # ------------------------------------------------------------------ Burberry
+  - brand: burberry
+    category: jackets
+    level: product_line
+    name: Burberry Harrington jacket
+    slug: harrington-jacket
+    aliases:
+      - {alias: harrington}
+  - brand: burberry
+    category: jackets
+    level: product_line
+    name: Burberry trench coat
+    slug: trench-coat
+    aliases:
+      - {alias: trench}
+      - {alias: trench coat}
+      - {alias: kensington}
+      - {alias: chelsea trench}
+  - brand: burberry
+    category: jackets
+    level: product_line
+    name: Burberry quilted jacket
+    slug: quilted-jacket
+    aliases:
+      - {alias: quilted}
+      - {alias: diamond quilted}
+      - {alias: quilted jacket}
+  - brand: burberry
+    category: hoodies
+    level: product_line
+    name: Burberry check hoodie
+    slug: check-hoodie
+    aliases:
+      - {alias: check hoodie}
+      - {alias: nova check hoodie}
+  - brand: burberry
+    category: sweatshirts
+    level: product_line
+    name: Burberry check sweatshirt
+    slug: check-sweatshirt
+    aliases:
+      - {alias: check sweatshirt}
+      - {alias: nova check sweatshirt}

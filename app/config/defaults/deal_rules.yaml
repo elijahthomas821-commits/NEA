@@ -1,0 +1,49 @@
+# Deal qualification rules (config kind: deal_rules).
+# !! PLACEHOLDER DEFAULTS - replace with your own numbers (PUT /config/deal_rules). !!
+currency: GBP
+
+# Hard gates: failing any of these rejects the listing (with a reason code).
+min_profit: "25.00"
+min_roi: "0.30"                    # 30% of total acquisition cost; null to disable
+max_median_sale_days: 30           # null to disable
+require_velocity_data: false       # if true, listings with unknown sale speed are rejected
+min_product_confidence: "0.75"
+min_authenticity_confidence: "0.50"
+max_authenticity_risk: "0.40"
+max_purchase_price: "300.00"       # listing price cap
+max_capital_per_item: "320.00"     # total acquisition cost cap (price + fees + postage)
+max_inventory_exposure: "2000.00"  # unsold stock at cost + this item
+max_units_per_product: 3           # unsold units of the same product
+exclude_kids_sizes: true
+
+# Price used for the maximum purchase price: "expected" (median) or "quick" (P25, safer).
+resale_basis: expected
+
+# Stricter thresholds for HIGH priority (all gates pass AND all of these hold).
+high_priority:
+  min_product_confidence: "0.85"
+  max_authenticity_risk: "0.25"
+  min_estimate_confidence: "0.60"
+  max_comp_level: L4
+  min_effective_n: "8"
+  min_profit: null
+  min_roi: null
+  min_liquidity: null
+
+# REVIEW tier: near misses and contradictory identification.
+review:
+  enabled: true
+  near_miss_pct: "0.10"
+  on_contradiction: true
+
+# Best tier reachable in each limiting situation.
+caps:
+  mislabel: normal          # brand inferred from photos of an unbranded listing
+  price_guide: review       # priced from your price guide, not sales data
+  ai_unavailable: normal    # AI identification needed but unavailable/over budget
+  velocity_unknown: normal  # no sale-speed data
+
+# The same listing is only re-alerted after a material price drop.
+realert:
+  min_price_drop_pct: "0.10"
+  min_price_drop_abs: "5.00"

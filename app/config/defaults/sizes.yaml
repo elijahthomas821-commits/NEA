@@ -1,0 +1,59 @@
+# Size systems and size value multipliers (config kind: sizes).
+#
+# Everything is normalised to the letter scale XXS XS S M L XL XXL 3XL 4XL.
+# numeric_systems maps numeric size labels to letters. A bare number ("48") is only
+# interpreted when the listing names the system ("IT 48", "EU 48", "UK 40", "chest 40") or
+# when the brand has a default system below; otherwise the size is left unknown rather than
+# guessed.
+
+numeric_systems:
+  eu_it:          # Italian/EU menswear sizes (C.P. Company, many jackets)
+    "42": XXS
+    "44": XS
+    "46": S
+    "48": M
+    "50": L
+    "52": XL
+    "54": XXL
+    "56": 3XL
+    "58": 4XL
+  uk_chest:       # UK/US chest size in inches
+    "32": XXS
+    "34": XS
+    "36": S
+    "38": M
+    "40": L
+    "42": XL
+    "44": XXL
+    "46": 3XL
+    "48": 4XL
+  moncler:        # Moncler size numbers
+    "00": XXS
+    "0": XS
+    "1": S
+    "2": M
+    "3": L
+    "4": XL
+    "5": XXL
+    "6": 3XL
+    "7": 4XL
+
+brand_numeric_system:
+  moncler: moncler
+  cp-company: eu_it
+
+default_numeric_system: null
+
+# Value multipliers by size relative to M/L = 1.00 (config: per category slug, "default"
+# otherwise). SEED VALUES - recalibrate from your own sales.
+multipliers:
+  default:
+    XXS: "0.80"
+    XS: "0.90"
+    S: "0.97"
+    M: "1.00"
+    L: "1.00"
+    XL: "0.97"
+    XXL: "0.92"
+    3XL: "0.85"
+    4XL: "0.80"

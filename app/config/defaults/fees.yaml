@@ -1,0 +1,41 @@
+# Fee schedules (config kind: fees). You buy on Vinted and resell on Vinted.
+#
+# !! PLACEHOLDER VALUES - VERIFY BEFORE RELYING ON THEM !!
+# These could not be checked against vinted.co.uk from the build environment. Check the
+# current Buyer Protection fee and typical postage on Vinted, then update this config through
+# the API (PUT /config/fees) or `resale config set fees <file>`. Each evaluation records the
+# fee version it used, so older evaluations stay reproducible after you change these.
+#
+# Money values are strings so they are read exactly (no binary floating point).
+currency: GBP
+values_verified_on: null     # set to the date you checked, e.g. "2026-10-01"
+default_purchase_channel: vinted
+default_selling_channel: vinted
+default_cleaning_cost: "0.00"
+default_repair_cost: "0.00"
+default_other_acquisition_cost: "0.00"
+
+purchase_channels:
+  vinted:
+    # Buyer Protection fee charged to you when you buy: fixed amount + percentage of the
+    # item price, rounded to the penny.
+    buyer_fee:
+      fixed: "0.70"
+      percent: "0.05"
+    # Typical postage you pay to have the item sent to you.
+    default_inbound_shipping: "2.99"
+    notes: "Vinted UK Buyer Protection fee and postage - PLACEHOLDER, verify."
+
+selling_channels:
+  vinted:
+    # Vinted UK has not charged private sellers a selling fee (the buyer pays Buyer
+    # Protection and postage). Verify this still holds.
+    selling_fee:
+      fixed: "0.00"
+      percent: "0.00"
+    outbound_shipping_paid_by_seller: "0.00"
+    packaging_cost: "0.50"
+    # Expected refunds/returns as a share of the sale price (an allowance, not a fee).
+    expected_refund_rate: "0.02"
+    other_selling_costs: "0.00"
+    notes: "Vinted UK seller costs - PLACEHOLDER, verify."
