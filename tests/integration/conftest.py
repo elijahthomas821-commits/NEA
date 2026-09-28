@@ -51,3 +51,25 @@ def api_key(db_session, operator) -> str:
 def auth_client(client, api_key):
     client.headers["Authorization"] = f"Bearer {api_key}"
     return client
+
+
+@pytest.fixture
+def recorder(db_session, config_bundle):
+    """Record a comparable sale through the real service."""
+    from app.services.audit import Actor
+    from app.services.catalogue import load_catalogue
+    from app.services.market_data import record_sale
+
+    catalogue = load_catalogue(db_session)
+
+    def record(sale):
+        return record_sale(
+            db_session,
+            sale,
+            catalogue=catalogue,
+            identification=config_bundle.identification,
+            sizes=config_bundle.sizes,
+            actor=Actor.system("test"),
+        )
+
+    return record

@@ -13,7 +13,7 @@ from app.models import MarketStatistic, Product
 from app.services.audit import Actor
 from app.services.catalogue import load_catalogue
 from app.services.csv_import import import_sales_csv
-from app.services.market_data import add_fx_rate, load_comps, record_sale, set_excluded
+from app.services.market_data import add_fx_rate, load_comps, set_excluded
 from app.services.market_stats import recompute_market_statistics
 from app.services.pricing import price_target
 from tests.factories import NOW
@@ -37,23 +37,6 @@ def raw(**overrides) -> RawSale:
     }
     data.update(overrides)
     return RawSale(**data)
-
-
-@pytest.fixture
-def recorder(db_session, config_bundle):
-    catalogue = load_catalogue(db_session)
-
-    def record(sale: RawSale):
-        return record_sale(
-            db_session,
-            sale,
-            catalogue=catalogue,
-            identification=config_bundle.identification,
-            sizes=config_bundle.sizes,
-            actor=ACTOR,
-        )
-
-    return record
 
 
 def product_by_slug(db_session, slug):

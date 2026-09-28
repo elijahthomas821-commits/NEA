@@ -315,3 +315,33 @@ class TestPriceGuide:
             product_slug=None, condition=None, size=None, currency="GBP",
             conditions=CONDITIONS, sizes=SIZES,
         ) is None  # fmt: skip
+
+
+class TestDocumentedExamples:
+    """Numbers quoted in docs/financial-calculations.md."""
+
+    def test_identical_l1_comps_confidence(self):
+        result = run(target(), [sale(100) for _ in range(6)])
+        comp = result.comps[0]
+        assert comp.recency.quantize(D("0.00001")) == D("0.92587")
+        assert comp.weight.quantize(D("0.00001")) == D("0.74070")
+        assert result.effective_sample_size == D(6)
+        assert result.confidence == D("0.846")
+
+    def test_six_comp_percentiles(self):
+        result = run(target(), [sale(p) for p in (90, 95, 100, 105, 110, 120)])
+        got = {k: v.quantize(D("0.01")) for k, v in result.percentiles.items()}
+        assert got == {
+            "p10": D("90.50"),
+            "p25": D("95.00"),
+            "p50": D("102.50"),
+            "p75": D("110.00"),
+            "p90": D("119.00"),
+        }
+        assert result.dispersion.quantize(D("0.001")) == D("0.146")
+
+    def test_weighted_median_example(self):
+        from app.analysis.market.stats import weighted_percentile
+
+        pairs = [(D(90), D(1)), (D(100), D(1)), (D(130), D(2))]
+        assert weighted_percentile(pairs, D("0.5")) == D(110)
