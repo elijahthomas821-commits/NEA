@@ -2,12 +2,12 @@
 
 # Confidence that the brand is right, by where it was found.
 brand_field_confidence: "0.95"        # the marketplace brand field
-brand_title_confidence: "0.85"        # the title
+brand_title_confidence: "0.90"        # the title
 brand_description_confidence: "0.60"  # only the description
-brand_fuzzy_min_similarity: "0.72"    # trigram similarity for misspellings
+brand_fuzzy_min_similarity: "0.50"    # trigram similarity for misspellings
 brand_fuzzy_factor: "0.80"            # confidence multiplier for fuzzy matches
 category_field_confidence: "0.90"
-category_title_confidence: "0.80"
+category_title_confidence: "0.85"
 contradiction_factor: "0.60"          # multiplier when sources disagree
 replica_factor: "0.20"                # multiplier when replica wording is present
 
@@ -50,8 +50,12 @@ replica_phrases:
 
 ai:
   enabled: true
-  # AI identification is only requested when rules-based confidence is below this.
+  # AI identification is only requested when rules-based confidence is below this (or the
+  # sources contradict each other)...
   invoke_below_confidence: "0.75"
+  # ...or when the listing has photos to check against the brand's authenticity checklist.
+  analyse_photos: true
+  max_photos: 6
   # AI-derived confidence can never exceed this.
   max_confidence: "0.80"
   agree_boost: "0.5"
@@ -81,4 +85,5 @@ matching:
   min_score: "0.60"
   min_margin: "0.08"
   fuzzy_min_similarity: "0.70"
-  generic_confidence_factor: "0.60"
+  # Applied when the category was unknown and is inferred from the matched product.
+  inferred_category_factor: "0.90"

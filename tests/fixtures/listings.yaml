@@ -1,0 +1,81 @@
+# Realistic listing fixtures (5 brands x 3 categories + edge cases) with the identification we
+# expect. Titles and fields are written the way sellers write them on Vinted. `product`
+# is a substring of the expected canonical product name ("any model" for generic matches).
+listings:
+  # ---------------------------------------------------------------- Stone Island
+  - title: "Stone Island Garment Dyed Crewneck Sweatshirt Navy L"
+    brand_field: "Stone Island"
+    category_field: "Sweatshirts"
+    size: "L"
+    condition: "Very good"
+    expect: {brand: stone-island, category: sweatshirts, size: L, condition: very_good, colour: navy, product: "crewneck sweatshirt"}
+  - title: "stone island hoodie black medium"
+    expect: {brand: stone-island, category: hoodies, size: null, colour: black, product: "any model"}
+  - title: "Stone Island Nylon Metal Overshirt - Ice Blue"
+    brand_field: "Stone Island"
+    size: "XL"
+    condition: "Good"
+    expect: {brand: stone-island, category: jackets, size: XL, condition: good, product: "Nylon Metal"}
+  - title: "STONE ISLAND SOFT SHELL-R JACKET KHAKI XXL"
+    expect: {brand: stone-island, category: jackets, size: XXL, colour: khaki, product: "Soft Shell-R"}
+
+  # ---------------------------------------------------------------- C.P. Company
+  - title: "C.P. Company Goggle Hoodie Navy M"
+    brand_field: "C.P. Company"
+    condition: "New with tags"
+    expect: {brand: cp-company, category: hoodies, size: M, condition: new_with_tags, product: "Goggle hoodie"}
+  - title: "CP Company lens sweatshirt grey"
+    size: "S"
+    expect: {brand: cp-company, category: sweatshirts, size: S, colour: grey, product: "Lens crewneck"}
+  - title: "C.P Company Chrome-R Overshirt 50"
+    brand_field: "C.P. Company"
+    size: "50"
+    expect: {brand: cp-company, category: jackets, size: L, product: "Chrome-R"}
+
+  # ---------------------------------------------------------------- Ralph Lauren
+  - title: "Polo Ralph Lauren Polo Bear Hoodie"
+    brand_field: "Ralph Lauren"
+    size: "M"
+    expect: {brand: ralph-lauren, category: hoodies, size: M, product: "Polo Bear hoodie"}
+  - title: "Ralph Lauren half zip sweatshirt navy large"
+    size: "L"
+    expect: {brand: ralph-lauren, category: sweatshirts, size: L, colour: navy, product: "half-zip"}
+  - title: "Ralph Lauren Harrington Jacket Navy"
+    brand_field: "Ralph Lauren"
+    size: "XL"
+    condition: "Very good"
+    expect: {brand: ralph-lauren, category: jackets, size: XL, condition: very_good, product: "Harrington"}
+
+  # ---------------------------------------------------------------- Moncler
+  - title: "Moncler Maya Down Jacket Black Size 3"
+    brand_field: "Moncler"
+    expect: {brand: moncler, category: jackets, size: L, colour: black, product: "Maya"}
+  - title: "Moncler logo hoodie white"
+    size: "M"
+    expect: {brand: moncler, category: hoodies, size: M, colour: white, product: "logo hoodie"}
+  - title: "Moncler sweatshirt with logo patch"
+    size: "S"
+    expect: {brand: moncler, category: sweatshirts, size: S, product: "any model"}
+
+  # ---------------------------------------------------------------- Burberry
+  - title: "Burberry nova check hoodie beige"
+    size: "L"
+    expect: {brand: burberry, category: hoodies, size: L, colour: beige, product: "check hoodie"}
+  - title: "Burberry Diamond Quilted Jacket Navy Medium"
+    brand_field: "Burberry"
+    size: "M"
+    expect: {brand: burberry, category: jackets, size: M, colour: navy, product: "quilted jacket"}
+  - title: "Burberry London logo sweatshirt"
+    size: "XL"
+    expect: {brand: burberry, category: sweatshirts, size: XL, product: "any model"}
+
+  # ---------------------------------------------------------------- edge cases
+  - title: "Nike Tech Fleece Hoodie"
+    brand_field: "Nike"
+    expect: {brand: null, category: hoodies, product: null}
+  - title: "Stone Island style overshirt with badge"
+    expect: {brand: null, category: jackets, product: null}
+  - title: "Stone Island knitted jumper"
+    expect: {brand: stone-island, category: knitwear, product: null}
+  - title: "Stone Island junior hoodie age 12"
+    expect: {brand: stone-island, category: hoodies, kids: true}

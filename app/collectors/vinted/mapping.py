@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass
 from urllib.parse import urlsplit
 
-from app.analysis.normalisation.text import normalise_text
+from app.analysis.normalisation.condition import match_condition_label
 from app.core.enums import Condition
 
 MARKETPLACE = "vinted"
@@ -110,35 +110,9 @@ def find_item_url(text: str) -> tuple[str, VintedItemRef] | None:
     return None
 
 
-# Condition labels as shown on Vinted sites (English, French, German, Italian, Spanish, Dutch).
-_CONDITION_LABELS: dict[str, Condition] = {}
-for _condition, _labels in {
-    Condition.NEW_WITH_TAGS: [
-        "new with tags", "neuf avec etiquette", "neu mit etikett", "nuovo con cartellino",
-        "nuevo con etiquetas", "nieuw met prijskaartje",
-    ],
-    Condition.NEW_WITHOUT_TAGS: [
-        "new without tags", "neuf sans etiquette", "neu ohne etikett", "nuovo senza cartellino",
-        "nuevo sin etiquetas", "nieuw zonder prijskaartje",
-    ],
-    Condition.VERY_GOOD: [
-        "very good", "tres bon etat", "sehr gut", "ottime condizioni", "muy bueno", "zeer goed",
-    ],
-    Condition.GOOD: ["good", "bon etat", "gut", "buone condizioni", "bueno", "goed"],
-    Condition.SATISFACTORY: [
-        "satisfactory", "satisfaisant", "zufriedenstellend", "discrete condizioni",
-        "satisfactorio", "redelijk",
-    ],
-}.items():  # fmt: skip
-    for _label in _labels:
-        _CONDITION_LABELS[normalise_text(_label)] = _condition
-
-
 def map_condition_label(label: str | None) -> Condition | None:
     """Exact Vinted condition label → :class:`Condition` (free text is handled elsewhere)."""
-    if not label:
-        return None
-    return _CONDITION_LABELS.get(normalise_text(label))
+    return match_condition_label(label)
 
 
 _LETTER_SIZES = {"XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL", "2XL", "3XL", "4XL"}

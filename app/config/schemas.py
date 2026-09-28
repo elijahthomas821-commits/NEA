@@ -408,7 +408,11 @@ class AuthenticityConfig(StrictModel):
 
 class AIIdentificationRules(StrictModel):
     enabled: bool = True
+    # Ask the AI when the rules result is below this confidence or has contradictions.
     invoke_below_confidence: Ratio = Decimal("0.75")
+    # Also send photos for the authenticity checklist whenever a listing has photos.
+    analyse_photos: bool = True
+    max_photos: int = Field(default=6, ge=1, le=20)
     max_confidence: Ratio = Decimal("0.80")
     agree_boost: Ratio = Decimal("0.5")
     disagree_factor: Ratio = Decimal("0.6")
@@ -428,17 +432,18 @@ class MatchingRules(StrictModel):
     min_score: Ratio = Decimal("0.60")
     min_margin: Ratio = Decimal("0.08")
     fuzzy_min_similarity: Ratio = Decimal("0.70")
-    generic_confidence_factor: Ratio = Decimal("0.60")
+    # Applied when the listing's category was unknown and is inferred from the product.
+    inferred_category_factor: Ratio = Decimal("0.90")
 
 
 class IdentificationConfig(StrictModel):
     brand_field_confidence: Ratio = Decimal("0.95")
-    brand_title_confidence: Ratio = Decimal("0.85")
+    brand_title_confidence: Ratio = Decimal("0.90")
     brand_description_confidence: Ratio = Decimal("0.60")
-    brand_fuzzy_min_similarity: Ratio = Decimal("0.72")
+    brand_fuzzy_min_similarity: Ratio = Decimal("0.50")
     brand_fuzzy_factor: Ratio = Decimal("0.80")
     category_field_confidence: Ratio = Decimal("0.90")
-    category_title_confidence: Ratio = Decimal("0.80")
+    category_title_confidence: Ratio = Decimal("0.85")
     contradiction_factor: Ratio = Decimal("0.60")
     replica_factor: Ratio = Decimal("0.20")
     generic_brand_values: list[str] = Field(default_factory=list)

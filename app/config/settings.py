@@ -64,8 +64,12 @@ class Settings(BaseSettings):
     # AI (optional). Disabled unless an API key is present and ai_enabled is true.
     ai_enabled: bool = True
     anthropic_api_key: SecretStr | None = None
-    ai_model: str = "claude-sonnet-5"
-    ai_timeout_seconds: float = Field(default=45.0, gt=0, le=300)
+    ai_model: str = "claude-opus-5"
+    # Listing analysis is an extraction task: low effort keeps it cheap and fast.
+    ai_effort: Literal["low", "medium", "high"] = "low"
+    # Server-side refusal fallbacks (a declined request is retried on a substitute model).
+    ai_refusal_fallbacks: bool = True
+    ai_timeout_seconds: float = Field(default=60.0, gt=0, le=600)
     ai_daily_budget_usd: Decimal = Field(default=Decimal("1.00"), ge=0)
     ai_monthly_budget_usd: Decimal = Field(default=Decimal("10.00"), ge=0)
     ai_max_images: int = Field(default=6, ge=1, le=20)
