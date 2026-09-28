@@ -78,6 +78,21 @@ class Settings(BaseSettings):
     ai_monthly_budget_usd: Decimal = Field(default=Decimal("10.00"), ge=0)
     ai_max_images: int = Field(default=6, ge=1, le=20)
 
+    @field_validator(
+        "telegram_bot_token",
+        "telegram_webhook_secret",
+        "telegram_webhook_url",
+        "telegram_alert_chat_id",
+        "anthropic_api_key",
+        mode="before",
+    )
+    @classmethod
+    def _blank_is_unset(cls, value: object) -> object:
+        """``TELEGRAM_BOT_TOKEN=`` (left empty in .env) means "not set", not an empty secret."""
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value.strip() if isinstance(value, str) else value
+
     @field_validator("telegram_allowed_user_ids", mode="before")
     @classmethod
     def _split_ids(cls, value: object) -> object:
