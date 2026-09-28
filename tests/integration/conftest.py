@@ -73,3 +73,20 @@ def recorder(db_session, config_bundle):
         )
 
     return record
+
+
+@pytest.fixture
+def files():
+    from tests.factories import image_bytes
+    from tests.telegram_updates import FakeFiles
+
+    return FakeFiles({f"p{i}": image_bytes(seed=i) for i in range(1, 5)})
+
+
+@pytest.fixture
+def bot(settings, test_db, db_session, files):
+    """The Telegram handler with a fixed clock, driven like the real bot."""
+    from app.notifications.telegram.handlers import BotHandler
+    from tests.telegram_updates import BOT_NOW, Harness
+
+    return Harness(BotHandler(settings, files, clock=lambda: BOT_NOW), test_db, db_session)

@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
 
 from app.core.enums import ListingStatus, PriceType, SaleSource
 from app.models import (
@@ -24,47 +21,17 @@ from app.models import (
     Purchase,
     User,
 )
-from app.notifications.telegram.handlers import BotHandler, EvaluationRequest, Outbox
-from app.notifications.telegram.types import TgUpdate
+from app.notifications.telegram.handlers import BotHandler, EvaluationRequest
 from app.services.users import create_user
 from tests.factories import image_bytes
 from tests.integration.test_notify import evaluate
 from tests.integration.test_pipeline import listing_for, seed_comps
-from tests.telegram_updates import FakeFiles, callback, message
+from tests.telegram_updates import BOT_NOW, FakeFiles, Harness, callback, last, message
 
 pytestmark = pytest.mark.integration
 
-NOW = datetime(2026, 9, 28, 10, 0, tzinfo=UTC)
+NOW = BOT_NOW
 LINK = "https://www.vinted.co.uk/items/5550001111-stone-island-crewneck-sweatshirt"
-
-
-@dataclass
-class Harness:
-    handler: BotHandler
-    test_db: object
-    db_session: Session
-
-    def send(self, update: dict) -> Outbox:
-        outbox = Outbox()
-        with self.test_db.session_scope() as session:  # type: ignore[attr-defined]
-            self.handler.handle(session, TgUpdate.model_validate(update), outbox)
-        self.db_session.expire_all()
-        return outbox
-
-
-@pytest.fixture
-def files():
-    return FakeFiles({f"p{i}": image_bytes(seed=i) for i in range(1, 5)})
-
-
-@pytest.fixture
-def bot(settings, test_db, db_session, files):
-    return Harness(BotHandler(settings, files, clock=lambda: NOW), test_db, db_session)
-
-
-def last(outbox: Outbox) -> str:
-    assert outbox.messages, "no reply"
-    return outbox.messages[-1].text
 
 
 def listing_by_ref(db_session, external_id="5550001111") -> Listing:

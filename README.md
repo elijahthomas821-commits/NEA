@@ -26,9 +26,11 @@ Built in phases (see the architecture plan). Implemented so far:
   reproducible snapshot of every evaluation.
 - **Telegram:** alerts with BUY / PASS / REVIEW, chat-based listing entry, photos, market data
   entry, purchase recording.
+- **Stock and results:** purchases (including bundles, split to the penny), the inventory
+  lifecycle, your sales (which feed back into market data and score the original prediction),
+  analytics and CSV exports.
 
-Still to come: inventory and resale tracking with analytics (Phase 8); hardening and full
-documentation (Phase 9).
+Still to come: hardening and full documentation (Phase 9).
 
 ## Quick start (Docker Compose)
 
@@ -88,6 +90,15 @@ Alerts go to your private chat (or `TELEGRAM_ALERT_CHAT_ID`; keep the private ch
 because in groups Telegram hides ordinary replies from bots). Listings you send always get a
 reply, including "not a deal"; bulk CSV imports only message you about listings worth a look,
 and a listing is only re-sent when its decision improves or its price drops materially.
+
+## Tracking stock and results
+
+After you buy something (BUY in Telegram, or `POST /purchases` for bundles), it is an item in
+your stock. Move it along with `/received 7`, `/listed 7 £99`, `/sale 7 £95`, `/shipped 7`,
+`/done 7` (or `/writeoff 7`), and see `/stock`, `/item 7` and `/stats`; the API has the same
+under `/inventory`, `/resales` and `/analytics` (summary, breakdowns, prediction accuracy,
+funnel, CSV exports). Every figure is defined in [docs/analytics.md](docs/analytics.md) and the
+money rules are in [docs/financial-calculations.md](docs/financial-calculations.md).
 
 ## Getting market data
 

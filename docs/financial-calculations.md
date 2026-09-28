@@ -358,7 +358,47 @@ With the section 3 example, if checkout charged £51.20: 107.30 − 51.20 = **£
 profit, ROI 56.10 / 51.20 = **109.6 %**. Cleaning and repairs are added to the inventory item
 later, not to the purchase.
 
-## 11. What these numbers are not
+**Bundles.** When several items are bought together, the purchase total (items, fee, postage,
+other) is split across them:
+
+- `expected_value` (default): in proportion to each item's expected resale price;
+- `equal`: the same share each;
+- `manual`: the amounts you give, which must add up to the total exactly.
+
+Each share is rounded down to the penny and the leftover pennies go, one each, to the items
+with the largest remainders (earlier items first on ties), so the shares always add up to the
+total and each is within a penny of its exact proportion. Example: £100.00 split by expected
+prices £90 / £60 / £30 → £50.00, £33.33, £16.67; £10.00 split equally three ways → £3.34,
+£3.33, £3.33. An item's expected profit is its evaluation's expected net proceeds minus its
+share.
+
+## 11. Selling: net proceeds and the outcome
+
+```
+net_proceeds  = sale_price + postage charged to the buyer − selling fees
+                − postage you paid − refunds − other selling costs
+profit        = net_proceeds − cost basis   (purchase share + cleaning + repairs + other)
+ROI           = profit / cost basis
+```
+
+Costs you don't give default to your `fees` settings for the channel: on Vinted no selling fee,
+no postage paid by you, and the £0.50 packaging placeholder. Refunds default to zero (the
+expected-refund allowance in section 3 is only for estimates).
+
+The prediction made at purchase is then scored: price error = actual − predicted expected price
+(and as a percentage of the prediction), whether the price fell between the predicted
+quick-sale and optimistic prices, profit and days-to-sale (listing → sale, or purchase → sale
+if never listed). A written-off item scores a loss of its whole cost basis (ROI −100 %). Later
+changes (a refund, extra costs, a corrected price) re-score it; a cancelled sale withdraws the
+score. Your sale also becomes a comparable sale (`own_sale`, the most trusted kind), unless the
+item was never identified to a brand and category.
+
+Example: item cost £35.00 (£30.00 share + £5.00 cleaning), listed 4 Sep, sold 14 Sep for
+£60.00 plus £3.00 postage charged, with £1.50 fees, £3.00 postage paid and £0.50 packaging →
+net £58.00, profit **£23.00**, ROI **65.71 %**, 10 days; predicted £65 (quick £55, optimistic
+£75) → error −£5.00 (−7.69 %), within the range.
+
+## 12. What these numbers are not
 
 They are estimates from the evidence recorded so far, with the assumptions above. Every
 evaluation stores its inputs: the configuration versions, the comps and their weights, every

@@ -28,12 +28,13 @@ from app.analysis.authenticity.risk import (
     assess_authenticity,
 )
 from app.analysis.deals.engine import DealDecision, DealInputs, ExposureSnapshot, decide
+from app.analysis.inventory.lifecycle import IN_STOCK
 from app.analysis.market.comps import MarketResult
 from app.analysis.profit.max_price import MaxPriceResult, max_purchase_price
 from app.analysis.profit.model import ProfitBreakdown, default_extras, profit_breakdown
 from app.analysis.velocity.velocity import VelocityResult
 from app.config.settings import Settings, get_settings
-from app.core.enums import InventoryStatus, ListingStatus, ProductLevel
+from app.core.enums import ListingStatus, ProductLevel
 from app.core.errors import NotFoundError
 from app.core.logging import get_logger
 from app.core.time import utcnow
@@ -55,14 +56,7 @@ from app.services.velocity import velocity_for
 log = get_logger(__name__)
 
 PIPELINE_VERSION = "1.0.0"
-UNSOLD_STATUSES = [
-    InventoryStatus.ORDERED.value,
-    InventoryStatus.IN_TRANSIT.value,
-    InventoryStatus.RECEIVED.value,
-    InventoryStatus.NEEDS_WORK.value,
-    InventoryStatus.READY_TO_LIST.value,
-    InventoryStatus.LISTED.value,
-]
+UNSOLD_STATUSES = sorted(status.value for status in IN_STOCK)
 
 
 @dataclass(frozen=True)

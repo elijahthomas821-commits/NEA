@@ -80,13 +80,17 @@ def create_app(
         return response
 
     from app.api.routes import (
+        alerts,
+        analytics,
         catalogue,
         config,
         evaluations,
         health,
         imports,
+        inventory,
         listings,
         market,
+        purchases,
         telegram,
     )
 
@@ -98,6 +102,10 @@ def create_app(
         catalogue.router,
         market.router,
         config.router,
+        alerts.router,
+        purchases.router,
+        inventory.router,
+        analytics.router,
         telegram.router,
     ):
         app.include_router(router)

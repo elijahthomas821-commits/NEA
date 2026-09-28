@@ -165,7 +165,13 @@ def open_alert(
 
 
 def record_decision(
-    session: Session, alert_id: int, decision: UserDecision, *, actor: Actor, now: datetime
+    session: Session,
+    alert_id: int,
+    decision: UserDecision,
+    *,
+    actor: Actor,
+    now: datetime,
+    note: str | None = None,
 ) -> Alert:
     alert = session.get(Alert, alert_id, with_for_update=True)
     if alert is None:
@@ -174,6 +180,8 @@ def record_decision(
     alert.user_decision = decision.value
     alert.decided_at = now
     alert.decided_by_user_id = actor.user_id
+    if note is not None:
+        alert.decision_note = note
     audit.record(
         session, actor, action="alert.decision", entity_type="alert", entity_id=alert.id,
         before=before, after={"user_decision": decision.value},

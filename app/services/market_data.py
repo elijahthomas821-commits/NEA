@@ -251,6 +251,26 @@ def observe_sold_listing(
     return row
 
 
+def record_sale_with_active_config(
+    session: Session,
+    raw: RawSale,
+    *,
+    actor: Actor,
+    inventory_item_id: int | None = None,
+    listing_id: int | None = None,
+) -> tuple[MarketSale, bool]:
+    """:func:`record_sale` with the active catalogue and configuration."""
+    from app.services.catalogue import load_catalogue
+    from app.services.config_service import ConfigService
+
+    bundle = ConfigService(session).bundle()
+    return record_sale(
+        session, raw, catalogue=load_catalogue(session), identification=bundle.identification,
+        sizes=bundle.sizes, actor=actor, inventory_item_id=inventory_item_id,
+        listing_id=listing_id,
+    )  # fmt: skip
+
+
 def record_sold_observation(
     session: Session, listing: Listing, *, sold_at: datetime, actor: Actor
 ) -> MarketSale | None:

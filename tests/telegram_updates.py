@@ -3,11 +3,18 @@
 from __future__ import annotations
 
 import itertools
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
+from sqlalchemy.orm import Session
+
 from app.notifications.telegram.client import FileTooLargeError, TelegramUnavailableError
+from app.notifications.telegram.handlers import BotHandler, Outbox
+from app.notifications.telegram.types import TgUpdate
 
 OPERATOR = 111
+BOT_NOW = datetime(2026, 9, 28, 10, 0, tzinfo=UTC)
 _ids = itertools.count(10_000)
 
 
@@ -95,3 +102,24 @@ class FakeFiles:
             raise FileTooLargeError(max_bytes)
         self.downloads.append(file_id)
         return data
+
+
+@dataclass
+class Harness:
+    """Runs updates through the handler the way the bot does: one transaction each."""
+
+    handler: BotHandler
+    test_db: Any
+    db_session: Session
+
+    def send(self, update: dict[str, Any]) -> Outbox:
+        outbox = Outbox()
+        with self.test_db.session_scope() as session:
+            self.handler.handle(session, TgUpdate.model_validate(update), outbox)
+        self.db_session.expire_all()
+        return outbox
+
+
+def last(outbox: Outbox) -> str:
+    assert outbox.messages, "no reply"
+    return outbox.messages[-1].text

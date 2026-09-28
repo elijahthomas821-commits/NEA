@@ -67,6 +67,7 @@ from app.notifications.telegram.formatter import (
     parse_callback,
     skip_keyboard,
 )
+from app.notifications.telegram.inventory_commands import InventoryCommands
 from app.notifications.telegram.parsing import (
     COMP_EXAMPLE,
     COMP_FORMAT,
@@ -124,6 +125,10 @@ or with the link as the photo caption.
 /comp – record a sold item you found (market data for pricing)
 /cancel – stop the current question
 
+<b>Your stock</b> (item numbers, e.g. 7):
+/stock – what you hold · /item 7 – one item · /stats – last 30 days
+/received 7 · /listed 7 £99 · /sale 7 £95 · /shipped 7 · /done 7 · /writeoff 7
+
 Alerts have BUY / PASS / REVIEW buttons. BUY only records your decision: buy the item \
 yourself, then tell me what you paid.
 <i>Estimates only — not guaranteed outcomes.</i>"""
@@ -137,6 +142,15 @@ COMMANDS = [
     ("show", "Latest result: /show 12"),
     ("recent", "Your latest listings"),
     ("comp", "Record a sold item (market data)"),
+    ("stock", "What you hold"),
+    ("item", "One stock item: /item 7"),
+    ("received", "It arrived: /received 7"),
+    ("listed", "You listed it: /listed 7 £99"),
+    ("sale", "You sold it: /sale 7 £95"),
+    ("shipped", "You posted it: /shipped 7"),
+    ("done", "Sale completed: /done 7"),
+    ("writeoff", "Lost or unsellable: /writeoff 7"),
+    ("stats", "The last 30 days"),
     ("cancel", "Stop the current question"),
     ("help", "How to use this bot"),
 ]
@@ -284,6 +298,7 @@ class BotHandler:
         self.settings = settings
         self.client = client
         self.clock = clock
+        self.inventory = InventoryCommands(self)
 
     # ------------------------------------------------------------------ entry point
 
@@ -401,6 +416,7 @@ class BotHandler:
             "show": self._cmd_show,
             "recent": self._cmd_recent,
             "comp": self._cmd_comp,
+            **self.inventory.commands,
         }
         handler = handlers.get(command)
         if handler is None:
@@ -880,7 +896,8 @@ class BotHandler:
         turn.reply(
             f"Recorded purchase #{purchase.id}: total "
             f"{_money(purchase.total_acquisition_cost, currency)}. "
-            f"Inventory item #{item.id} is marked ordered.{expected}"
+            f"It is item {item.id} in your stock (ordered) — /received {item.id} when it "
+            f"arrives.{expected}"
         )
 
     # ------------------------------------------------------------------ photos
