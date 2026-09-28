@@ -114,6 +114,12 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_bot(_args: argparse.Namespace) -> int:
+    from app.notifications.telegram.runner import run_bot
+
+    return run_bot()
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="resale", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -159,6 +165,11 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("evaluate", help="evaluate one listing now (synchronously)")
     p.add_argument("listing_id", type=int)
     p.set_defaults(func=_cmd_evaluate)
+
+    p = sub.add_parser(
+        "bot", help="run the Telegram bot (long polling), or register the webhook in webhook mode"
+    )
+    p.set_defaults(func=_cmd_bot)
     return parser
 
 

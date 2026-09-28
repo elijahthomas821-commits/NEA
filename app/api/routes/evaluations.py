@@ -8,6 +8,7 @@ from fastapi import APIRouter, Request
 from sqlalchemy import select
 
 from app.api.deps import DispatcherDep, PrincipalDep, SessionDep, SettingsDep
+from app.core.enums import AlertMode
 from app.core.errors import NotFoundError
 from app.models import Listing, ListingEvaluation
 from app.schemas.evaluations import EvaluationDetail, EvaluationSummary
@@ -41,6 +42,10 @@ def get_evaluation(
     return EvaluationDetail.model_validate(row)
 
 
+def _mode(notify: bool) -> AlertMode:
+    return AlertMode.ALWAYS if notify else AlertMode.OFF
+
+
 @router.post("/listings/{listing_id}/evaluate")
 def evaluate_now(
     listing_id: int,
@@ -59,7 +64,7 @@ def evaluate_now(
     correlation_id = getattr(request.state, "correlation_id", None)
     if not sync:
         dispatcher.evaluate_listing(
-            listing_id, trigger="manual", notify=notify, correlation_id=correlation_id
+            listing_id, trigger="manual", alert=_mode(notify), correlation_id=correlation_id
         )
         return {"queued": True}
     ai = build_ai_service(settings, request.app.state.database)
@@ -68,7 +73,7 @@ def evaluate_now(
     )
     session.commit()
     if notify:
-        dispatcher.send_alert(evaluation.id, correlation_id=correlation_id)
+        dispatcher.send_alert(evaluation.id, alert=AlertMode.ALWAYS, correlation_id=correlation_id)
     return {
         "queued": False,
         "evaluation": EvaluationDetail.model_validate(evaluation).model_dump(mode="json"),

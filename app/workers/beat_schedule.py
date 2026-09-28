@@ -11,6 +11,10 @@ BEAT_SCHEDULE: dict[str, dict[str, Any]] = {
         "task": "market.recompute_statistics",
         "schedule": crontab(hour=3, minute=17),
     },
+    "retry-pending-alerts": {
+        "task": "notify.retry_pending",
+        "schedule": crontab(minute="*/15"),
+    },
     "prune-expired-state": {
         "task": "maintenance.prune_expired_state",
         "schedule": crontab(hour=4, minute=7),

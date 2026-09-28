@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.errors import ConflictError, NotFoundError
+from app.core.errors import ConflictError, NotFoundError, PermissionDeniedError
 from app.core.ids import generate_api_key, hash_api_key
 from app.core.time import utcnow
 from app.models import ApiKey, User
@@ -126,8 +126,10 @@ def user_for_telegram(session: Session, telegram_user_id: int) -> User | None:
 
 def ensure_telegram_user(session: Session, telegram_user_id: int, username: str | None) -> User:
     """Get or create the user for an *allowlisted* Telegram account (caller checks the list)."""
-    user = user_for_telegram(session, telegram_user_id)
+    user = session.scalar(select(User).where(User.telegram_user_id == telegram_user_id))
     if user is not None:
+        if not user.is_active:
+            raise PermissionDeniedError("this Telegram account's user is disabled")
         return user
     base = (username or f"tg{telegram_user_id}")[:48]
     candidate = base

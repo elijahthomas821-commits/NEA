@@ -18,6 +18,7 @@ TASK_MODULES = [
     "app.workers.tasks.maintenance",
     "app.workers.tasks.market_stats",
     "app.workers.tasks.evaluate",
+    "app.workers.tasks.notify",
 ]
 
 

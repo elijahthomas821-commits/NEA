@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import select
@@ -34,7 +34,7 @@ from app.core.enums import Condition, PriceType, ProductLevel, SaleSource
 from app.core.errors import NotFoundError, ValidationFailedError
 from app.core.money import normalise_currency
 from app.core.time import days_between
-from app.models import FxRate, Marketplace, MarketSale, Product
+from app.models import Brand, Category, FxRate, Listing, Marketplace, MarketSale, Product
 from app.services import audit
 from app.services.audit import Actor
 from app.services.catalogue import load_products, resolve_brand, resolve_category
@@ -199,6 +199,70 @@ def record_sale(
         after={"price": str(raw.sale_price), "currency": raw.currency, "source": raw.source.value},
     )  # fmt: skip
     return row, True
+
+
+def observe_sold_listing(
+    session: Session,
+    listing: Listing,
+    *,
+    sold_at: datetime,
+    catalogue: Catalogue,
+    identification: IdentificationConfig,
+    sizes: SizesConfig,
+    actor: Actor,
+) -> MarketSale | None:
+    """A listing you were watching sold to someone else: its last asking price becomes a comp.
+
+    It is stored as ``last_asking_price``, so pricing applies the configured haircut and lower
+    trust (the final price may have been negotiated down). Nothing is recorded when the listing
+    has no price, or was never identified to a catalogue brand and an in-scope category.
+    """
+    if listing.price is None or listing.currency is None:
+        return None
+    brand = session.get(Brand, listing.brand_id) if listing.brand_id else None
+    category = session.get(Category, listing.category_id) if listing.category_id else None
+    if brand is None or category is None:
+        return None
+    listed_at = min(listing.listed_at or listing.first_seen_at, sold_at)
+    raw = RawSale(
+        source=SaleSource.OBSERVED_SOLD_LISTING,
+        source_ref=f"listing:{listing.id}",
+        marketplace=listing.marketplace,
+        title=listing.title[:300],
+        brand=brand.slug,
+        category=category.slug,
+        size=listing.size_normalised,
+        colour=listing.colour,
+        condition=listing.condition,
+        sale_price=listing.price,
+        currency=listing.currency,
+        price_type=PriceType.LAST_ASKING_PRICE,
+        listed_at=listed_at,
+        sold_at=sold_at,
+        notes="last asking price of a listing that sold",
+    )
+    try:
+        row, _ = record_sale(
+            session, raw, catalogue=catalogue, identification=identification, sizes=sizes,
+            actor=actor, listing_id=listing.id,
+        )  # fmt: skip
+    except ValidationFailedError:
+        return None
+    return row
+
+
+def record_sold_observation(
+    session: Session, listing: Listing, *, sold_at: datetime, actor: Actor
+) -> MarketSale | None:
+    """:func:`observe_sold_listing` with the active catalogue and configuration."""
+    from app.services.catalogue import load_catalogue
+    from app.services.config_service import ConfigService
+
+    bundle = ConfigService(session).bundle()
+    return observe_sold_listing(
+        session, listing, sold_at=sold_at, catalogue=load_catalogue(session),
+        identification=bundle.identification, sizes=bundle.sizes, actor=actor,
+    )  # fmt: skip
 
 
 def set_excluded(

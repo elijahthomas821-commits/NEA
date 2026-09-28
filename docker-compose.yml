@@ -98,6 +98,8 @@ services:
   bot:
     <<: *app
     command: ["resale", "bot"]
+    # A long poll lasts up to TELEGRAM_POLL_TIMEOUT_SECONDS; let it finish on shutdown.
+    stop_grace_period: 45s
     depends_on:
       migrate:
         condition: service_completed_successfully

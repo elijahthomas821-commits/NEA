@@ -36,7 +36,7 @@ def test_async_evaluate_queues(auth_client, dispatcher):
         f"/listings/{listing['id']}/evaluate", params={"sync": False}
     ).json() == {"queued": True}
     assert dispatcher.calls == [
-        ("evaluate_listing", {"listing_id": listing["id"], "trigger": "manual", "notify": False})
+        ("evaluate_listing", {"listing_id": listing["id"], "trigger": "manual", "alert": "off"})
     ]
 
 
@@ -49,7 +49,8 @@ def test_missing_things(auth_client):
 def test_inline_dispatcher_runs_the_task_body(app, auth_client, test_db):
     notified: list[int] = []
 
-    def notify(*, evaluation_id: int) -> None:
+    def notify(*, evaluation_id: int, alert: str) -> None:
+        assert alert == "always"
         notified.append(evaluation_id)
 
     app.state.dispatcher = InlineDispatcher(evaluate=run_evaluation, notify=notify)
@@ -61,4 +62,4 @@ def test_inline_dispatcher_runs_the_task_body(app, auth_client, test_db):
 
 
 def test_run_evaluation_for_missing_listing_returns_none(test_db):
-    assert run_evaluation(123456789, trigger="ingest", notify=False) is None
+    assert run_evaluation(123456789, trigger="ingest") is None

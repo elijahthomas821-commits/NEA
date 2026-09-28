@@ -244,3 +244,36 @@ def test_concurrent_duplicate_submissions_create_one_row(engine, committed_clean
         )
     assert rows == 1
     assert history == 1
+
+
+class TestDetails:
+    def test_set_details(self, db_session):
+        from app.services.ingestion import set_listing_details
+
+        listing = ingest_listing(
+            db_session, raw_listing(raw_brand=None, raw_size=None), source="telegram", now=NOW
+        ).listing
+        result = set_listing_details(
+            db_session, listing.id, now=NOW, raw_brand="  Stone   Island ", raw_size="",
+            description="  Worn twice.  ",
+        )  # fmt: skip
+        assert result.content_changed
+        assert (listing.raw_brand, listing.raw_size, listing.description) == (
+            "Stone Island",
+            None,
+            "Worn twice.",
+        )
+        assert not set_listing_details(
+            db_session, listing.id, now=NOW, raw_brand=None
+        ).content_changed
+
+    def test_errors(self, db_session):
+        from app.services.ingestion import set_listing_details
+
+        listing = ingest_listing(db_session, raw_listing(), source="telegram", now=NOW).listing
+        with pytest.raises(ValueError, match="not editable"):
+            set_listing_details(db_session, listing.id, now=NOW, price="1")
+        with pytest.raises(NotFoundError):
+            set_listing_details(db_session, 999999999, now=NOW, raw_size="L")
+        with pytest.raises(ValidationFailedError, match="brand is too long"):
+            set_listing_details(db_session, listing.id, now=NOW, raw_brand="x" * 101)

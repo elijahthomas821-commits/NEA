@@ -331,7 +331,34 @@ add at least `auth_reject_min_warning` (1.0) to the log-odds. When the risk come
 the brand's base rate, you get REVIEW with the checks to make. Low check confidence also leads
 to REVIEW by default (`low_auth_confidence_action: review`).
 
-## 10. What these numbers are not
+## 10. Recording a purchase
+
+The system never buys anything. After you buy an item yourself and confirm it in Telegram, the
+purchase records what you actually paid:
+
+```
+total_acquisition_cost = item price + Buyer Protection fee + postage + other
+```
+
+The fee and postage are first estimated from your `fees` settings (buy at £45.00: £2.95 +
+£2.99, total £50.94) and you can replace them with what checkout charged:
+
+- **one amount** is the total you paid: the fee estimate is kept (capped at total − item
+  price) and postage is the rest. A total of £51.20 → fee £2.95, postage £3.25.
+- **two amounts** are the fee and the postage: `2.95 3.49` → total £51.44.
+
+The purchase keeps a snapshot of the prediction, so it can be checked once the item sells:
+
+```
+expected_profit_at_purchase = expected net proceeds (from the evaluation) − actual total cost
+predicted_ROI               = expected_profit_at_purchase / actual total cost
+```
+
+With the section 3 example, if checkout charged £51.20: 107.30 − 51.20 = **£56.10** expected
+profit, ROI 56.10 / 51.20 = **109.6 %**. Cleaning and repairs are added to the inventory item
+later, not to the purchase.
+
+## 11. What these numbers are not
 
 They are estimates from the evidence recorded so far, with the assumptions above. Every
 evaluation stores its inputs: the configuration versions, the comps and their weights, every

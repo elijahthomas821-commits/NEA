@@ -144,6 +144,14 @@ class AlertStatus(StrEnum):
     SUPPRESSED = "suppressed"
 
 
+class AlertMode(StrEnum):
+    """Whether an evaluation should produce a Telegram message."""
+
+    ALWAYS = "always"  # you asked about this listing: always send the result
+    DEALS = "deals"  # only worthwhile results, under the re-alert policy (bulk/automatic)
+    OFF = "off"
+
+
 class UserDecision(StrEnum):
     BUY = "buy"
     PASS = "pass"  # noqa: S105 - not a password

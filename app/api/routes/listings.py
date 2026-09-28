@@ -9,7 +9,7 @@ from sqlalchemy import func, select
 
 from app.api.deps import DispatcherDep, PrincipalDep, SessionDep, SettingsDep
 from app.api.uploads import read_upload
-from app.core.enums import ListingStatus
+from app.core.enums import AlertMode, ListingStatus
 from app.core.errors import NotFoundError
 from app.core.time import utcnow
 from app.models import Listing, ListingImage, PriceHistory
@@ -23,6 +23,7 @@ from app.schemas.listings import (
 )
 from app.services.images import add_listing_image
 from app.services.ingestion import IngestResult, ingest_listing, update_listing
+from app.services.market_data import record_sold_observation
 from app.services.submissions import (
     missing_fields,
     raw_listing_from_submission,
@@ -49,7 +50,7 @@ def _queue_if_needed(
     dispatcher.evaluate_listing(
         result.listing.id,
         trigger=_trigger_for(result),
-        notify=notify,
+        alert=AlertMode.ALWAYS if notify else AlertMode.OFF,
         correlation_id=getattr(request.state, "correlation_id", None),
     )
     return True
@@ -158,16 +159,23 @@ def patch_listing(
     session: SessionDep,
     dispatcher: DispatcherDep,
 ) -> ListingIngestOut:
-    """Record a price change or a status change (reserved, sold, removed)."""
+    """Record a price change or a status change (reserved, sold, removed).
+
+    Marking a listing ``sold`` means it sold to someone else: its last asking price is kept as
+    a (weak) market observation. If you bought it, record a purchase instead.
+    """
+    now = utcnow()
     result = update_listing(
         session,
         listing_id,
-        now=utcnow(),
+        now=now,
         price=body.price,
         currency=body.currency,
         status=body.status,
         note=body.note,
     )
+    if result.status_changed and result.listing.status == ListingStatus.SOLD.value:
+        record_sold_observation(session, result.listing, sold_at=now, actor=principal.actor)
     session.commit()
     queued = (
         _queue_if_needed(request, dispatcher, result, notify=True) if body.reevaluate else False
@@ -231,7 +239,7 @@ def upload_images(
         dispatcher.evaluate_listing(
             listing.id,
             trigger="manual",
-            notify=True,
+            alert=AlertMode.ALWAYS,
             correlation_id=getattr(request.state, "correlation_id", None),
         )
     return out

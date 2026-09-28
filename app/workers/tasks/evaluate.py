@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from sqlalchemy.exc import OperationalError
 
+from app.core.enums import AlertMode
 from app.core.errors import NotFoundError
 from app.core.logging import get_logger
 from app.database.session import get_database
@@ -19,7 +20,7 @@ def run_evaluation(
     listing_id: int,
     *,
     trigger: str,
-    notify: bool,
+    alert: AlertMode | str = AlertMode.OFF,
     dispatcher: TaskDispatcher | None = None,
     correlation_id: str | None = None,
 ) -> int | None:
@@ -31,8 +32,9 @@ def run_evaluation(
     except NotFoundError:
         log.warning("evaluate_listing_missing", listing_id=listing_id)
         return None
-    if notify and dispatcher is not None:
-        dispatcher.send_alert(evaluation_id, correlation_id=correlation_id)
+    mode = AlertMode(alert)
+    if mode is not AlertMode.OFF and dispatcher is not None:
+        dispatcher.send_alert(evaluation_id, alert=mode, correlation_id=correlation_id)
     return evaluation_id
 
 
@@ -47,13 +49,13 @@ def evaluate_listing_task(
     self: AppTask,
     listing_id: int,
     trigger: str = "ingest",
-    notify: bool = True,
+    alert: str = AlertMode.ALWAYS.value,
     correlation_id: str | None = None,
 ) -> int | None:
     return run_evaluation(
         listing_id,
         trigger=trigger,
-        notify=notify,
+        alert=alert,
         dispatcher=CeleryDispatcher(),
         correlation_id=correlation_id,
     )

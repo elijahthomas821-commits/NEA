@@ -295,6 +295,46 @@ def update_listing(
     return result
 
 
+DETAIL_FIELDS = frozenset(
+    {"raw_brand", "raw_category", "raw_size", "raw_colour", "raw_condition", "description"}
+)
+_DETAIL_LIMITS = {"description": 5000}
+
+
+def set_listing_details(
+    session: Session, listing_id: int, *, now: datetime, **fields: str | None
+) -> IngestResult:
+    """Details you typed in (brand, size, condition...). ``None`` leaves a field unchanged."""
+    unknown = set(fields) - DETAIL_FIELDS
+    if unknown:
+        raise ValueError(f"not editable here: {sorted(unknown)}")
+    listing = session.execute(
+        select(Listing)
+        .where(Listing.id == listing_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    ).scalar_one_or_none()
+    if listing is None:
+        raise NotFoundError(f"listing {listing_id} not found")
+    result = IngestResult(listing=listing, created=False)
+    for name, raw_value in fields.items():
+        if raw_value is None:
+            continue
+        value = " ".join(raw_value.split()) if name != "description" else raw_value.strip()
+        if not value:
+            continue
+        if len(value) > _DETAIL_LIMITS.get(name, 100):
+            raise ValidationFailedError(f"{name.removeprefix('raw_')} is too long")
+        setattr(listing, name, value)
+    new_hash = _listing_hash(listing)
+    if new_hash != listing.content_hash:
+        listing.content_hash = new_hash
+        result.content_changed = True
+    listing.last_seen_at = now
+    session.flush()
+    return result
+
+
 def find_possible_duplicate(session: Session, listing: Listing, now: datetime) -> int | None:
     """The same item re-listed under a new ID: same seller (or same price) and same title."""
     title_norm = normalise_text(listing.title)

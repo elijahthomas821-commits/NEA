@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
+from sqlalchemy import select
 
 from tests.factories import image_bytes
 
@@ -28,7 +31,10 @@ class TestSubmit:
         assert listing["currency"] == "GBP"
         assert listing["raw_size"] == "L"
         assert dispatcher.calls == [
-            ("evaluate_listing", {"listing_id": listing["id"], "trigger": "ingest", "notify": True})
+            (
+                "evaluate_listing",
+                {"listing_id": listing["id"], "trigger": "ingest", "alert": "always"},
+            )
         ]
 
     def test_resubmit_unchanged_is_200_and_not_requeued(self, auth_client, dispatcher):
@@ -149,3 +155,25 @@ class TestImportsApi:
         assert run["status"] == "partial"
         assert auth_client.get(f"/imports/{run['id']}").json()["rows_failed"] == 1
         assert auth_client.get("/imports/99999").status_code == 404
+
+
+def test_marking_sold_keeps_the_last_asking_price(auth_client, db_session):
+    """A listing that sold to someone else becomes a (weak) market observation."""
+    from app.core.enums import PriceType, SaleSource
+    from app.models import Brand, Category, Listing, MarketSale
+
+    listing_id = auth_client.post("/listings", json={"url": LINK, "price": "95"}).json()["listing"][
+        "id"
+    ]
+    listing = db_session.get(Listing, listing_id)
+    listing.brand_id = db_session.scalar(select(Brand.id).where(Brand.slug == "stone-island"))
+    listing.category_id = db_session.scalar(
+        select(Category.id).where(Category.slug == "sweatshirts")
+    )
+    db_session.commit()
+    auth_client.patch(f"/listings/{listing_id}", json={"status": "sold"})
+    sale = db_session.scalar(select(MarketSale).where(MarketSale.listing_id == listing_id))
+    assert sale.source == SaleSource.OBSERVED_SOLD_LISTING.value
+    assert sale.price_type == PriceType.LAST_ASKING_PRICE.value
+    assert sale.sale_price == Decimal("95.00")
+    assert sale.created_by_user_id is not None

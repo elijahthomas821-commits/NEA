@@ -9,6 +9,7 @@ from fastapi.responses import PlainTextResponse
 
 from app.api.deps import DispatcherDep, PrincipalDep, SessionDep, SettingsDep
 from app.api.uploads import read_upload
+from app.core.enums import AlertMode
 from app.core.errors import NotFoundError
 from app.core.time import utcnow
 from app.models import IngestionRun
@@ -48,7 +49,8 @@ def import_listings(
             dispatcher.evaluate_listing(
                 result.listing.id,
                 trigger="ingest" if result.created else "manual",
-                notify=notify,
+                # Bulk imports only message you about listings worth a look.
+                alert=AlertMode.DEALS if notify else AlertMode.OFF,
                 correlation_id=getattr(request.state, "correlation_id", None),
             )
     return IngestionRunOut.model_validate(run)

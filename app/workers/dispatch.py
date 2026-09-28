@@ -11,6 +11,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
+from app.core.enums import AlertMode
 from app.core.logging import get_logger
 
 log = get_logger(__name__)
@@ -21,17 +22,29 @@ SEND_ALERT_TASK = "notify.send_alert"
 
 class TaskDispatcher(Protocol):
     def evaluate_listing(
-        self, listing_id: int, *, trigger: str, notify: bool, correlation_id: str | None = None
+        self,
+        listing_id: int,
+        *,
+        trigger: str,
+        alert: AlertMode,
+        correlation_id: str | None = None,
     ) -> None: ...
 
-    def send_alert(self, evaluation_id: int, *, correlation_id: str | None = None) -> None: ...
+    def send_alert(
+        self, evaluation_id: int, *, alert: AlertMode, correlation_id: str | None = None
+    ) -> None: ...
 
 
 class CeleryDispatcher:
     """Sends tasks by name, so callers never import worker modules."""
 
     def evaluate_listing(
-        self, listing_id: int, *, trigger: str, notify: bool, correlation_id: str | None = None
+        self,
+        listing_id: int,
+        *,
+        trigger: str,
+        alert: AlertMode,
+        correlation_id: str | None = None,
     ) -> None:
         from app.workers.celery_app import celery_app
 
@@ -40,17 +53,23 @@ class CeleryDispatcher:
             kwargs={
                 "listing_id": listing_id,
                 "trigger": trigger,
-                "notify": notify,
+                "alert": AlertMode(alert).value,
                 "correlation_id": correlation_id,
             },
         )
 
-    def send_alert(self, evaluation_id: int, *, correlation_id: str | None = None) -> None:
+    def send_alert(
+        self, evaluation_id: int, *, alert: AlertMode, correlation_id: str | None = None
+    ) -> None:
         from app.workers.celery_app import celery_app
 
         celery_app.send_task(
             SEND_ALERT_TASK,
-            kwargs={"evaluation_id": evaluation_id, "correlation_id": correlation_id},
+            kwargs={
+                "evaluation_id": evaluation_id,
+                "alert": AlertMode(alert).value,
+                "correlation_id": correlation_id,
+            },
         )
 
 
@@ -61,14 +80,26 @@ class RecordingDispatcher:
     calls: list[tuple[str, dict[str, Any]]] = field(default_factory=list)
 
     def evaluate_listing(
-        self, listing_id: int, *, trigger: str, notify: bool, correlation_id: str | None = None
+        self,
+        listing_id: int,
+        *,
+        trigger: str,
+        alert: AlertMode,
+        correlation_id: str | None = None,
     ) -> None:
         self.calls.append(
-            ("evaluate_listing", {"listing_id": listing_id, "trigger": trigger, "notify": notify})
+            (
+                "evaluate_listing",
+                {"listing_id": listing_id, "trigger": trigger, "alert": AlertMode(alert).value},
+            )
         )
 
-    def send_alert(self, evaluation_id: int, *, correlation_id: str | None = None) -> None:
-        self.calls.append(("send_alert", {"evaluation_id": evaluation_id}))
+    def send_alert(
+        self, evaluation_id: int, *, alert: AlertMode, correlation_id: str | None = None
+    ) -> None:
+        self.calls.append(
+            ("send_alert", {"evaluation_id": evaluation_id, "alert": AlertMode(alert).value})
+        )
 
 
 @dataclass
@@ -79,12 +110,19 @@ class InlineDispatcher:
     notify: Callable[..., Any] | None = None
 
     def evaluate_listing(
-        self, listing_id: int, *, trigger: str, notify: bool, correlation_id: str | None = None
+        self,
+        listing_id: int,
+        *,
+        trigger: str,
+        alert: AlertMode,
+        correlation_id: str | None = None,
     ) -> None:
-        self.evaluate(listing_id=listing_id, trigger=trigger, notify=notify, dispatcher=self)
+        self.evaluate(listing_id=listing_id, trigger=trigger, alert=alert, dispatcher=self)
 
-    def send_alert(self, evaluation_id: int, *, correlation_id: str | None = None) -> None:
+    def send_alert(
+        self, evaluation_id: int, *, alert: AlertMode, correlation_id: str | None = None
+    ) -> None:
         if self.notify is None:
             log.info("inline_dispatcher_no_notifier", evaluation_id=evaluation_id)
             return
-        self.notify(evaluation_id=evaluation_id)
+        self.notify(evaluation_id=evaluation_id, alert=alert)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING
 
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
@@ -16,6 +17,9 @@ from app.core.logging import bind_correlation_id, clear_context, configure_loggi
 from app.database.session import Database, get_database
 from app.workers.dispatch import CeleryDispatcher, TaskDispatcher
 
+if TYPE_CHECKING:
+    from app.notifications.telegram.runner import TelegramBot
+
 
 def create_app(
     settings: Settings | None = None,
@@ -23,6 +27,7 @@ def create_app(
     database: Database | None = None,
     dispatcher: TaskDispatcher | None = None,
     rate_limiter: RateLimiter | None = None,
+    telegram_bot: TelegramBot | None = None,
     configure_logs: bool = True,
 ) -> FastAPI:
     settings = settings or get_settings()
@@ -43,6 +48,13 @@ def create_app(
     redis_url = settings.redis_url.get_secret_value()
     app.state.rate_limiter = rate_limiter or RedisRateLimiter(redis_url)
     app.state.redis_probe = _redis_probe(redis_url) if rate_limiter is None else None
+    if telegram_bot is None and settings.telegram_mode == "webhook":
+        from app.notifications.telegram.runner import build_bot
+
+        telegram_bot = build_bot(
+            settings, database=app.state.database, dispatcher=app.state.dispatcher
+        )
+    app.state.telegram_bot = telegram_bot
 
     install_error_handlers(app)
 
@@ -75,6 +87,7 @@ def create_app(
         imports,
         listings,
         market,
+        telegram,
     )
 
     for router in (
@@ -85,6 +98,7 @@ def create_app(
         catalogue.router,
         market.router,
         config.router,
+        telegram.router,
     ):
         app.include_router(router)
     return app

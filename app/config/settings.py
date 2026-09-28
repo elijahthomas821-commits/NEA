@@ -6,6 +6,7 @@ stored in the database (see :mod:`app.config.schemas`). Secrets never go in the 
 
 from __future__ import annotations
 
+import re
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
@@ -15,6 +16,9 @@ from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 from app.core.redaction import register_secret
+
+# Telegram accepts 1-256 of these characters; 16 is our minimum for a guessable-proof secret.
+_WEBHOOK_SECRET_RE = re.compile(r"[A-Za-z0-9_-]{16,256}")
 
 
 class Settings(BaseSettings):
@@ -101,6 +105,12 @@ class Settings(BaseSettings):
                 raise ValueError("webhook mode requires an https:// TELEGRAM_WEBHOOK_URL")
             if self.telegram_webhook_secret is None:
                 raise ValueError("webhook mode requires TELEGRAM_WEBHOOK_SECRET")
+        if self.telegram_webhook_secret is not None and not _WEBHOOK_SECRET_RE.fullmatch(
+            self.telegram_webhook_secret.get_secret_value()
+        ):
+            raise ValueError(
+                "TELEGRAM_WEBHOOK_SECRET must be 16-256 characters of A-Z, a-z, 0-9, _ and -"
+            )
         return self
 
     @property
